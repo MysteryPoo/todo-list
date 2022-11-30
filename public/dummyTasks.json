@@ -1,0 +1,30 @@
+{
+    "data": {
+        "taskList": [
+            {
+                "id": 0,
+                "title": "Task A",
+                "type": "DAILY",
+                "due": "2022-11-23T18:25:43.511Z"
+            },
+            {
+                "id": 1,
+                "title": "Task B Short",
+                "type": "DAILY",
+                "due": "2022-11-23T18:25:43.511Z"
+            },
+            {
+                "id": 2,
+                "title": "Task C Medium",
+                "type": "DAILY",
+                "due": "2022-11-22T18:25:43.511Z"
+            },
+            {
+                "id": 3,
+                "title": "Task D Long Title",
+                "type": "WEEKLY",
+                "due": "2022-11-27T18:25:43.511Z"
+            }
+        ]
+    }
+}
