@@ -1,17 +1,6 @@
 <script setup lang="ts">
-import { ref, onMounted } from "vue";
 import { RouterLink, RouterView } from "vue-router";
 import HelloWorld from "./components/HelloWorld.vue";
-import TaskService from "./services/task.service";
-import type { Ref } from "vue";
-import type ITask from "@/interfaces/task.interface";
-
-const taskService: TaskService = new TaskService();
-const tasks: Ref<Array<ITask>> = ref([]);
-
-onMounted(async () => {
-  tasks.value = await taskService.getTasks();
-});
 </script>
 
 <template>
@@ -25,7 +14,7 @@ onMounted(async () => {
     />
 
     <div class="wrapper">
-      <HelloWorld msg="You did it!" :tasks="tasks" />
+      <HelloWorld msg="You did it!" />
 
       <nav>
         <RouterLink to="/">Home</RouterLink>

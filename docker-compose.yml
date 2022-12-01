@@ -1,0 +1,17 @@
+version: '3'
+services:
+  mongo:
+    container_name: todo_mongo
+    image: mongo:4.4.11
+    restart: always
+    environment:
+      - MONGODB_DB_NAME=${MONGODB_DB_NAME}
+      - MONGO_INITDB_ROOT_USERNAME=${MONGODB_USERNAME}
+      - MONGO_INITDB_ROOT_PASSWORD=${MONGODB_PASSWORD}
+    volumes:
+      - todo_mongo_volume:/data/db
+    ports:
+      - "27017:27017"
+
+volumes:
+  todo_mongo_volume:

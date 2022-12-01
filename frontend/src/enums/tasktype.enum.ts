@@ -1,7 +1,7 @@
 export enum TaskType {
-  DAILY = "DAILY",
-  WEEKLY = "WEEKLY",
-  MONTHLY = "MONTHLY",
-  QUARTERLY = "QUARTERLY",
-  ANNUALLY = "ANNUALLY",
+  DAILY = "Daily",
+  WEEKLY = "Weekly",
+  MONTHLY = "Monthly",
+  QUARTERLY = "Quarterly",
+  ANNUALLY = "Yearly",
 }

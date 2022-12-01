@@ -4,7 +4,7 @@
       <input :id="task.id.toString()" type="checkbox" :value="task.id" />
       <label :for="task.id.toString()">{{ task.title }}</label>
     </div>
-    <h3 :class="pastDue">{{ task.dueDT.toFormat("M/d/y") }}</h3>
+    <h3 :class="pastDue">{{ task.due.toFormat("M/d/y") }}</h3>
   </div>
 </template>
 
@@ -18,7 +18,7 @@ const props = defineProps<{
 }>();
 
 const pastDue = computed(() =>
-  props.task.dueDT < DateTime.now() ? "past-due" : "not-due"
+  props.task.due < DateTime.now() ? "past-due" : "not-due"
 );
 </script>
 
