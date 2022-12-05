@@ -1,6 +1,11 @@
 <template>
   <div class="task-list">
-    <TaskCard v-for="task in tasks" :key="task.id" :task="task" />
+    <TaskCard
+      v-for="task in tasks"
+      :key="task.id"
+      :task="task"
+      @remove="$emit('remove-task', $event)"
+    />
   </div>
 </template>
 
@@ -10,6 +15,10 @@ import type ITask from "@/interfaces/task.interface";
 
 defineProps<{
   tasks: Array<ITask>;
+}>();
+
+defineEmits<{
+  (e: "remove-task", id: string): void;
 }>();
 </script>
 

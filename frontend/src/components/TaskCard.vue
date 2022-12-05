@@ -1,10 +1,18 @@
 <template>
   <div class="task">
-    <div class="main">
-      <input :id="task.id.toString()" type="checkbox" :value="task.id" />
-      <label :for="task.id.toString()">{{ task.title }}</label>
+    <div>
+      <div class="main">
+        <input :id="task.id.toString()" type="checkbox" :value="task.id" />
+        <label :for="task.id.toString()">{{ task.title }}</label>
+        <Button icon="pi pi-pencil" class="utility" />
+        <Button
+          icon="pi pi-trash"
+          class="utility"
+          @click="$emit('remove', task.id)"
+        />
+      </div>
+      <h3 :class="pastDue">Due: {{ task.due.toFormat("M/d/y") }}</h3>
     </div>
-    <h3 :class="pastDue">{{ task.due.toFormat("M/d/y") }}</h3>
   </div>
 </template>
 
@@ -12,14 +20,24 @@
 import type ITask from "@/interfaces/task.interface";
 import { DateTime } from "luxon";
 import { computed } from "vue";
+import Button from "primevue/button";
 
 const props = defineProps<{
   task: ITask;
 }>();
 
-const pastDue = computed(() =>
-  props.task.due < DateTime.now() ? "past-due" : "not-due"
-);
+defineEmits<{
+  (e: "remove", id: string): void;
+}>();
+
+const pastDue = computed(() => {
+  const now: DateTime = DateTime.now();
+  const midnight = DateTime.fromFormat(
+    `${now.month}/${now.day}/${now.year}`,
+    "M/d/y"
+  );
+  return props.task.due < midnight ? "past-due" : "not-due";
+});
 </script>
 
 <style lang="scss" scoped>
@@ -41,6 +59,9 @@ const pastDue = computed(() =>
     display: flex;
     flex-direction: row;
     align-items: center;
+    .utility {
+      margin: 5px;
+    }
   }
   label {
     color: var(--text);
