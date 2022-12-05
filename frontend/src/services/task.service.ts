@@ -1,15 +1,36 @@
 import { TaskType } from "@/enums/tasktype.enum";
 import type ITask from "@/interfaces/task.interface";
+import type INewTaskDTO from "@/dtos/newtask.dto";
 import { DateTime } from "luxon";
 
 export default class TaskService {
-  public async newTask(task: ITask): Promise<ITask> {
-    return task;
+  public async newTask(task: INewTaskDTO): Promise<ITask> {
+    const response = await fetch("http://localhost:3000/v1/tasks", {
+      method: "POST",
+      headers: {
+        //Authorization: `Bearer ${window.localStorage.token}`,
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(task),
+    });
+    if (response.status === 201) {
+      const taskFromServer = await response.json();
+      return {
+        id: taskFromServer._id,
+        title: taskFromServer.title,
+        type: this.enumFromValue(taskFromServer.type, TaskType),
+        due: DateTime.fromISO(taskFromServer.due),
+        completed: taskFromServer.complete,
+        lastUpdated: DateTime.fromISO(taskFromServer.lastUpdated),
+      };
+    }
+    throw new Error("Unknown error occurred");
   }
 
   public async getTasks(): Promise<Array<ITask>> {
-    const res = await fetch("http://localhost:3000/v1/tasks");
-    const d = await res.json();
+    const response = await fetch("http://localhost:3000/v1/tasks");
+    const d = await response.json();
     const taskList: Array<ITask> = [];
     for (const task of d) {
       taskList.push({
@@ -22,6 +43,24 @@ export default class TaskService {
       });
     }
     return taskList;
+  }
+
+  public async deleteTask(id: string): Promise<ITask> {
+    const response = await fetch(`http://localhost:3000/v1/tasks/${id}`, {
+      method: "DELETE",
+    });
+    if (response.status === 200) {
+      const taskFromServer = await response.json();
+      return {
+        id: taskFromServer._id,
+        title: taskFromServer.title,
+        type: this.enumFromValue(taskFromServer.type, TaskType),
+        due: DateTime.fromISO(taskFromServer.due),
+        completed: taskFromServer.complete,
+        lastUpdated: DateTime.fromISO(taskFromServer.lastUpdated),
+      };
+    }
+    throw new Error("Unknown error occurred");
   }
 
   public enumFromValue<T extends Record<string, string>>(
