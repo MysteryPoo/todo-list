@@ -15,6 +15,7 @@ import { PatchTaskParams } from './dto/patch-task.params.dto';
 import { GetTaskParams } from './dto/get-task.params.dto';
 import { DeleteTaskParams } from './dto/delete-task.params.dto';
 import { Task } from './schemas/task.schema';
+import { DateTime } from 'luxon';
 
 @Controller({
   path: 'tasks',
@@ -31,6 +32,22 @@ export class TasksController {
   @Get()
   findAll() {
     return this.tasksService.findAll();
+  }
+
+  @Get('lastUpdated')
+  async lastUpdated(): Promise<{ lastUpdated: string }> {
+    const tasks = await this.tasksService.findAll();
+    tasks.sort((a, b) => {
+      const dateA = DateTime.fromISO(a.lastUpdated);
+      const dateB = DateTime.fromISO(b.lastUpdated);
+      if (dateA < dateB) return -1;
+      if (dateA > dateB) return 1;
+      return 0;
+    });
+    tasks.reverse();
+    return tasks.length > 0
+      ? { lastUpdated: tasks[0].lastUpdated }
+      : { lastUpdated: DateTime.now().toISO() };
   }
 
   @Get(':id')
