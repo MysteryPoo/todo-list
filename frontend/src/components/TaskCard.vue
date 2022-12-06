@@ -2,7 +2,12 @@
   <div class="task">
     <div>
       <div class="main">
-        <input :id="task.id.toString()" type="checkbox" :value="task.id" />
+        <input
+          :id="task.id.toString()"
+          type="checkbox"
+          :value="task.id"
+          :checked="$props.task.completed"
+        />
         <label :for="task.id.toString()">{{ task.title }}</label>
         <Button
           icon="pi pi-pencil"
