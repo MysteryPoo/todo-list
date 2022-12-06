@@ -1,6 +1,7 @@
 import { TaskType } from "@/enums/tasktype.enum";
 import type ITask from "@/interfaces/task.interface";
 import type INewTaskDTO from "@/dtos/newtask.dto";
+import type IUpdateTaskDTO from "@/dtos/updatetask.dto";
 import { DateTime } from "luxon";
 
 export default class TaskService {
@@ -43,6 +44,32 @@ export default class TaskService {
       });
     }
     return taskList;
+  }
+
+  public async updateTask(task: IUpdateTaskDTO): Promise<ITask> {
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { id, ...body } = task;
+    const response = await fetch(`http://localhost:3000/v1/tasks/${task.id}`, {
+      method: "PATCH",
+      headers: {
+        //Authorization: `Bearer ${window.localStorage.token}`,
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(body),
+    });
+    if (response.status === 200) {
+      const taskFromServer = await response.json();
+      return {
+        id: taskFromServer._id,
+        title: taskFromServer.title,
+        type: this.enumFromValue(taskFromServer.type, TaskType),
+        due: DateTime.fromISO(taskFromServer.due),
+        completed: taskFromServer.complete,
+        lastUpdated: DateTime.fromISO(taskFromServer.lastUpdated),
+      };
+    }
+    throw new Error("Unknown error occurred");
   }
 
   public async deleteTask(id: string): Promise<ITask> {
