@@ -46,6 +46,12 @@ export default class TaskService {
     return taskList;
   }
 
+  public async getLastUpdated(): Promise<string> {
+    const response = await fetch("http://localhost:3000/v1/tasks/lastUpdated");
+    const d = await response.json();
+    return d.lastUpdated;
+  }
+
   public async updateTask(task: IUpdateTaskDTO): Promise<ITask> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id, ...body } = task;
