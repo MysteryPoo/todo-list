@@ -4,7 +4,11 @@
       <div class="main">
         <input :id="task.id.toString()" type="checkbox" :value="task.id" />
         <label :for="task.id.toString()">{{ task.title }}</label>
-        <Button icon="pi pi-pencil" class="utility" />
+        <Button
+          icon="pi pi-pencil"
+          class="utility"
+          @click="$emit('update', task.id)"
+        />
         <Button
           icon="pi pi-trash"
           class="utility"
@@ -28,6 +32,7 @@ const props = defineProps<{
 
 defineEmits<{
   (e: "remove", id: string): void;
+  (e: "update", id: string): void;
 }>();
 
 const pastDue = computed(() => {
