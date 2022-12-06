@@ -1,4 +1,7 @@
 <template>
+  <header>
+    {{ lastUpdated }}
+  </header>
   <main>
     <FieldSet legend="New Task" :toggleable="true" :collapsed="true">
       <NewTaskForm @new-task="newTask" />
@@ -70,7 +73,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, ref, type Ref } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch, type Ref } from "vue";
 import { TaskType } from "@/enums/tasktype.enum";
 import type ITask from "@/interfaces/task.interface";
 import type INewTaskForm from "@/interfaces/newTaskForm.interface";
@@ -92,9 +95,17 @@ const taskService: TaskService = new TaskService();
 const tasks: Ref<Array<ITask>> = ref([]);
 const updateTaskVisible = ref(false);
 const taskToUpdate: Ref<ITask | undefined> = ref(undefined);
+const lastUpdated = ref("");
+const refreshInterval: Ref<number | undefined> = ref(undefined);
 
 onMounted(async () => {
-  tasks.value = await taskService.getTasks();
+  refreshInterval.value = setInterval(async () => {
+    lastUpdated.value = await taskService.getLastUpdated();
+  }, 1000);
+});
+
+onUnmounted(() => {
+  clearInterval(refreshInterval.value);
 });
 
 const dailyTasks = computed(() =>
@@ -160,6 +171,8 @@ function updateTask(id: string): void {
   taskToUpdate.value = task;
   updateTaskVisible.value = true;
 }
+
+watch(lastUpdated, async () => (tasks.value = await taskService.getTasks()));
 </script>
 
 <style lang="scss" scoped>
