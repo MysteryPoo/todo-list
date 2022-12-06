@@ -34,11 +34,19 @@ export class TasksService {
     updateTaskDto: UpdateTaskDto,
   ): Promise<Task | null> {
     const task: Task | null = await this.taskModel
-      .findByIdAndUpdate(id, {
-        complete: updateTaskDto.complete,
-        due: updateTaskDto.due,
-        lastUpdated: DateTime.now().setZone('UTC').toISO(),
-      })
+      .findByIdAndUpdate(
+        id,
+        {
+          title: updateTaskDto.title,
+          complete: updateTaskDto.complete,
+          type: updateTaskDto.type,
+          due: updateTaskDto.due,
+          lastUpdated: DateTime.now().setZone('UTC').toISO(),
+        },
+        {
+          returnDocument: 'after',
+        },
+      )
       .exec();
     return task;
   }
