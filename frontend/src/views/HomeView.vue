@@ -182,10 +182,16 @@ const yearlyTasks = computed(() =>
 );
 
 async function newTask(newTask: INewTaskForm): Promise<void> {
+  const midnight = DateTime.fromJSDate(newTask.due).plus({
+    hour: -newTask.due.getHours(),
+    minute: -newTask.due.getMinutes(),
+    second: -newTask.due.getSeconds(),
+    millisecond: -newTask.due.getMilliseconds(),
+  });
   const task: newTaskDto = new newTaskDto(
     newTask.title,
     taskService.enumFromValue(newTask.taskType, TaskType),
-    DateTime.fromJSDate(newTask.due),
+    midnight,
     newTask.description
   );
   tasks.value.push({
