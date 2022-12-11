@@ -6,6 +6,7 @@ This template should help get you started developing with Vue 3 in Vite.
 Auto Update completed tasks to uncompleted when the time is appropriate
 Hide completed tasks after some time
 Add an Undo queue
+Add button to show hidden tasks for a short time
 Refactor HomeView into smaller pieces
 Deploy to server
 Setup Traefik
