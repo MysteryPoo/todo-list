@@ -6,7 +6,7 @@
           :id="task.id.toString()"
           type="checkbox"
           :value="task.id"
-          :checked="$props.task.completed"
+          v-model="completed"
         />
         <label :for="task.id.toString()">{{ task.title }}</label>
         <Button
@@ -26,6 +26,7 @@
 </template>
 
 <script lang="ts" setup>
+import { onMounted, ref, watch } from "vue";
 import type ITask from "@/interfaces/task.interface";
 import { DateTime } from "luxon";
 import { computed } from "vue";
@@ -35,9 +36,10 @@ const props = defineProps<{
   task: ITask;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
   (e: "remove", id: string): void;
   (e: "update", id: string): void;
+  (e: "complete", info: { id: string; isComplete: boolean }): void;
 }>();
 
 const pastDue = computed(() => {
@@ -47,6 +49,25 @@ const pastDue = computed(() => {
     "M/d/y"
   );
   return props.task.due < midnight ? "past-due" : "not-due";
+});
+
+const completed = ref(false);
+
+onMounted(() => {
+  completed.value = props.task.completed;
+});
+
+watch(
+  () => props.task.completed,
+  (newValue: boolean) => {
+    //console.log(`Completed set by props: ${newValue}`);
+    //completed.value = newValue;
+  }
+);
+
+watch(completed, (newValue) => {
+  console.log(`Completed changed to: ${newValue}`);
+  emit("complete", { id: props.task.id, isComplete: newValue });
 });
 </script>
 

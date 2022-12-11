@@ -6,6 +6,7 @@
       :task="task"
       @remove="$emit('remove-task', $event)"
       @update="$emit('update-task', $event)"
+      @complete="$emit('complete-task', $event)"
     />
   </div>
 </template>
@@ -21,6 +22,7 @@ defineProps<{
 defineEmits<{
   (e: "remove-task", id: string): void;
   (e: "update-task", id: string): void;
+  (e: "complete-task", info: { id: string; isComplete: boolean }): void;
 }>();
 </script>
 

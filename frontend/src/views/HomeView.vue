@@ -20,6 +20,7 @@
       <TaskList
         @remove-task="removeTask"
         @update-task="updateTask"
+        @complete-task="completeTask"
         :tasks="dailyTasks"
       />
     </FieldSet>
@@ -103,7 +104,7 @@ onMounted(async () => {
   refreshInterval.value = setInterval(async () => {
     try {
       lastUpdated.value = await taskService.getLastUpdated();
-      if (actionQueue.value.length > 0) {
+      while (actionQueue.value.length > 0) {
         const action = actionQueue.value.shift();
         if (!action) return;
         try {
@@ -113,7 +114,7 @@ onMounted(async () => {
                 action.task as newTaskDto
               );
               for (const taskAction of actionQueue.value) {
-                switch(taskAction.type) {
+                switch (taskAction.type) {
                   case ActionType.CREATE: {
                     const task = taskAction.task as newTaskDto;
                     if (task.id === (action.task as newTaskDto).id) {
@@ -151,7 +152,7 @@ onMounted(async () => {
               throw new Error("Unknown action type in queue");
           }
         } catch {
-          actionQueue.value.unshift(action);
+          if (action.attempts++ < 5) actionQueue.value.unshift(action);
         }
       }
     } catch {
@@ -245,6 +246,26 @@ function updateTask(id: string): void {
   if (!task) return;
   taskToUpdate.value = task;
   updateTaskVisible.value = true;
+}
+
+function completeTask(info: { id: string; isComplete: boolean }): void {
+  // TODO: Refactor into smaller DTO
+  console.log(`HomeView: Completing task with: ${info.isComplete}`);
+  const taskToUpdate = tasks.value.find((task) => task.id === info.id);
+  if (!taskToUpdate) return;
+  const task: IUpdateTaskDTO = {
+    id: taskToUpdate.id,
+    title: taskToUpdate.title,
+    description: taskToUpdate.description,
+    type: taskToUpdate.type,
+    due: taskToUpdate.due,
+    complete: info.isComplete,
+  };
+  actionQueue.value.push({
+    task: task,
+    type: ActionType.UPDATE,
+    attempts: 0,
+  });
 }
 
 watch(lastUpdated, async () => (tasks.value = await taskService.getTasks()));
