@@ -2,6 +2,15 @@
 
 This template should help get you started developing with Vue 3 in Vite.
 
+## TO DO
+Auto Update completed tasks to uncompleted when the time is appropriate
+Hide completed tasks after some time
+Add an Undo queue
+Refactor HomeView into smaller pieces
+Deploy to server
+Setup Traefik
+Setup TLS
+
 ## Recommended IDE Setup
 
 [VSCode](https://code.visualstudio.com/) + [Volar](https://marketplace.visualstudio.com/items?itemName=Vue.volar) (and disable Vetur) + [TypeScript Vue Plugin (Volar)](https://marketplace.visualstudio.com/items?itemName=Vue.vscode-typescript-vue-plugin).

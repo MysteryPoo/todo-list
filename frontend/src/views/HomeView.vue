@@ -3,15 +3,18 @@
     {{ lastUpdated }}
   </header>
   <main>
-    <FieldSet legend="New Task" :toggleable="true" :collapsed="true">
-      <NewTaskForm @new-task="newTask" />
-      <UpdateTaskForm
-        :visible="updateTaskVisible"
-        :task="taskToUpdate"
-        @close="updateTaskVisible = false"
-        @update-task="requestUpdateTask"
-      />
-    </FieldSet>
+    <UpdateTaskForm
+      :visible="updateTaskVisible"
+      :task="taskToUpdate"
+      @close="updateTaskVisible = false"
+      @update-task="requestUpdateTask"
+    />
+    <NewTaskForm
+      :visible="newTaskVisible"
+      @close="newTaskVisible = false"
+      @new-task="newTask"
+    />
+    <Button label="New Task" @click="newTaskVisible = true" />
     <FieldSet
       legend="Daily"
       :toggleable="true"
@@ -32,6 +35,7 @@
       <TaskList
         @remove-task="removeTask"
         @update-task="updateTask"
+        @complete-task="completeTask"
         :tasks="weeklyTasks"
       />
     </FieldSet>
@@ -43,6 +47,7 @@
       <TaskList
         @remove-task="removeTask"
         @update-task="updateTask"
+        @complete-task="completeTask"
         :tasks="monthlyTasks"
       />
     </FieldSet>
@@ -54,6 +59,7 @@
       <TaskList
         @remove-task="removeTask"
         @update-task="updateTask"
+        @complete-task="completeTask"
         :tasks="quarterlyTasks"
       />
     </FieldSet>
@@ -65,11 +71,10 @@
       <TaskList
         @remove-task="removeTask"
         @update-task="updateTask"
+        @complete-task="completeTask"
         :tasks="yearlyTasks"
       />
     </FieldSet>
-    <DynamicDialog />
-    <TheWelcome />
   </main>
 </template>
 
@@ -82,9 +87,8 @@ import type IUpdateTaskForm from "@/interfaces/updateTaskForm.interface";
 import newTaskDto from "@/dtos/newtask.dto";
 import type IUpdateTaskDTO from "@/dtos/updatetask.dto";
 import TaskService from "@/services/task.service";
-import TheWelcome from "../components/TheWelcome.vue";
+import Button from "primevue/button";
 import FieldSet from "primevue/fieldset";
-import DynamicDialog from "primevue/dynamicdialog";
 import TaskList from "@/components/TaskList.vue";
 import NewTaskForm from "@/components/NewTaskForm.vue";
 import UpdateTaskForm from "@/components/UpdateTaskForm.vue";
@@ -94,6 +98,7 @@ import { useActionStore, ActionType, type IAction } from "@/stores/action";
 const store = useActionStore();
 const taskService: TaskService = new TaskService();
 const tasks: Ref<Array<ITask>> = ref([]);
+const newTaskVisible = ref(false);
 const updateTaskVisible = ref(false);
 const taskToUpdate: Ref<ITask | undefined> = ref(undefined);
 const lastUpdated = ref("");
@@ -208,6 +213,7 @@ async function newTask(newTask: INewTaskForm): Promise<void> {
     type: ActionType.CREATE,
     attempts: 0,
   });
+  newTaskVisible.value = false;
 }
 
 async function requestUpdateTask(taskToUpdate: IUpdateTaskForm): Promise<void> {
