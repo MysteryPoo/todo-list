@@ -88,7 +88,7 @@ import TaskList from "@/components/TaskList.vue";
 import NewTaskForm from "@/components/NewTaskForm.vue";
 import UpdateTaskForm from "@/components/UpdateTaskForm.vue";
 import { DateTime } from "luxon";
-import { useActionStore, ActionType } from "@/stores/action";
+import { useActionStore, ActionType, type IAction } from "@/stores/action";
 
 const store = useActionStore();
 const taskService: TaskService = new TaskService();
@@ -97,13 +97,62 @@ const updateTaskVisible = ref(false);
 const taskToUpdate: Ref<ITask | undefined> = ref(undefined);
 const lastUpdated = ref("");
 const refreshInterval: Ref<number | undefined> = ref(undefined);
+const actionQueue: Ref<IAction[]> = ref([]);
 
 onMounted(async () => {
   refreshInterval.value = setInterval(async () => {
     try {
       lastUpdated.value = await taskService.getLastUpdated();
-      if (store.queue.length > 0) {
-        await store.send();
+      if (actionQueue.value.length > 0) {
+        const action = actionQueue.value.shift();
+        if (!action) return;
+        try {
+          switch (action.type) {
+            case ActionType.CREATE: {
+              const taskFromServer = await taskService.newTask(
+                action.task as newTaskDto
+              );
+              for (const taskAction of actionQueue.value) {
+                switch(taskAction.type) {
+                  case ActionType.CREATE: {
+                    const task = taskAction.task as newTaskDto;
+                    if (task.id === (action.task as newTaskDto).id) {
+                      task.id = taskFromServer.id;
+                    }
+                    break;
+                  }
+                  case ActionType.UPDATE: {
+                    const task = taskAction.task as IUpdateTaskDTO;
+                    if (task.id === (action.task as IUpdateTaskDTO).id) {
+                      task.id = taskFromServer.id;
+                    }
+                    break;
+                  }
+                  case ActionType.DELETE: {
+                    const task = taskAction.task as string;
+                    if (task === (action.task as string)) {
+                      taskAction.task = taskFromServer.id;
+                    }
+                    break;
+                  }
+                }
+              }
+              break;
+            }
+            case ActionType.UPDATE: {
+              await taskService.updateTask(action.task as IUpdateTaskDTO);
+              break;
+            }
+            case ActionType.DELETE: {
+              await taskService.deleteTask(action.task as string);
+              break;
+            }
+            default:
+              throw new Error("Unknown action type in queue");
+          }
+        } catch {
+          actionQueue.value.unshift(action);
+        }
       }
     } catch {
       console.log("There was an error.");
@@ -147,7 +196,7 @@ async function newTask(newTask: INewTaskForm): Promise<void> {
     completed: false,
     lastUpdated: DateTime.now(),
   });
-  store.addAction({
+  actionQueue.value.push({
     task: task,
     type: ActionType.CREATE,
     attempts: 0,
@@ -163,7 +212,7 @@ async function requestUpdateTask(taskToUpdate: IUpdateTaskForm): Promise<void> {
     due: DateTime.fromJSDate(taskToUpdate.due),
     complete: taskToUpdate.complete,
   };
-  store.addAction({
+  actionQueue.value.push({
     task,
     type: ActionType.UPDATE,
     attempts: 0,
@@ -179,7 +228,7 @@ async function requestUpdateTask(taskToUpdate: IUpdateTaskForm): Promise<void> {
 }
 
 async function removeTask(id: string): Promise<void> {
-  store.addAction({
+  actionQueue.value.push({
     task: id,
     type: ActionType.DELETE,
     attempts: 0,
