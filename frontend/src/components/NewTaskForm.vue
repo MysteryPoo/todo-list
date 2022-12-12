@@ -23,7 +23,7 @@
     <template #footer>
       <Button
         icon="pi pi-plus"
-        @click="$emit('new-task', form)"
+        @click="$emit('new-task', convertFormToDto())"
         label="Submit"
       />
       <Button icon="pi pi-times" label="Cancel" @click="$emit('close')" />
@@ -34,19 +34,22 @@
 <script lang="ts" setup>
 import { ref, type Ref } from "vue";
 import type INewTaskForm from "@/interfaces/newTaskForm.interface";
+import newTaskDto from "@/dtos/newtask.dto";
 import { TaskType } from "@/enums/tasktype.enum";
+import TaskService from "@/services/task.service";
 import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
 import Dropdown from "primevue/dropdown";
 import Calendar from "primevue/calendar";
 import Button from "primevue/button";
+import { useMidnight } from "@/composables/midnight";
 
 defineProps<{
   visible: boolean;
 }>();
 
 defineEmits<{
-  (e: "new-task", form: INewTaskForm): void;
+  (e: "new-task", form: newTaskDto): void;
   (e: "close"): void;
 }>();
 
@@ -56,12 +59,24 @@ for (const value of Object.keys(TaskType)) {
   tasktypes.value.push(TaskType[value as keyof typeof TaskType]);
 }
 
+const taskService = new TaskService();
+const midnight = useMidnight();
+
 const form: Ref<INewTaskForm> = ref({
   title: "",
   description: undefined,
   taskType: "",
   due: new Date(),
 });
+
+function convertFormToDto(): newTaskDto {
+  return new newTaskDto(
+    form.value.title,
+    taskService.enumFromValue(form.value.taskType, TaskType),
+    midnight.getMidnight(form.value.due),
+    form.value.description
+  );
+}
 </script>
 
 <style lang="scss" scoped>

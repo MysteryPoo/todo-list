@@ -82,9 +82,7 @@
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from "vue";
 import { TaskType } from "@/enums/tasktype.enum";
 import type ITask from "@/interfaces/task.interface";
-import type INewTaskForm from "@/interfaces/newTaskForm.interface";
-import type IUpdateTaskForm from "@/interfaces/updateTaskForm.interface";
-import newTaskDto from "@/dtos/newtask.dto";
+import type newTaskDto from "@/dtos/newtask.dto";
 import type IUpdateTaskDTO from "@/dtos/updatetask.dto";
 import TaskService from "@/services/task.service";
 import Button from "primevue/button";
@@ -93,17 +91,22 @@ import TaskList from "@/components/TaskList.vue";
 import NewTaskForm from "@/components/NewTaskForm.vue";
 import UpdateTaskForm from "@/components/UpdateTaskForm.vue";
 import { DateTime } from "luxon";
-import { useActionStore, ActionType, type IAction } from "@/stores/action";
+import {
+  Action,
+  ActionQueueService,
+  ActionType,
+  type IAction,
+} from "@/services/actionQueue.service";
 
-const store = useActionStore();
-const taskService: TaskService = new TaskService();
-const tasks: Ref<Array<ITask>> = ref([]);
-const newTaskVisible = ref(false);
-const updateTaskVisible = ref(false);
-const taskToUpdate: Ref<ITask | undefined> = ref(undefined);
-const lastUpdated = ref("");
-const refreshInterval: Ref<number | undefined> = ref(undefined);
 const actionQueue: Ref<IAction[]> = ref([]);
+const lastUpdated = ref("");
+const newTaskVisible = ref(false);
+const refreshInterval: Ref<number | undefined> = ref(undefined);
+const taskService: TaskService = new TaskService();
+const actionQueueService = new ActionQueueService(taskService);
+const tasks: Ref<Array<ITask>> = ref([]);
+const taskToUpdate: Ref<ITask | undefined> = ref(undefined);
+const updateTaskVisible = ref(false);
 
 onMounted(async () => {
   refreshInterval.value = setInterval(async () => {
@@ -186,19 +189,7 @@ const yearlyTasks = computed(() =>
   tasks.value.filter((task: ITask) => task.type === TaskType.ANNUALLY)
 );
 
-async function newTask(newTask: INewTaskForm): Promise<void> {
-  const midnight = DateTime.fromJSDate(newTask.due).plus({
-    hour: -newTask.due.getHours(),
-    minute: -newTask.due.getMinutes(),
-    second: -newTask.due.getSeconds(),
-    millisecond: -newTask.due.getMilliseconds(),
-  });
-  const task: newTaskDto = new newTaskDto(
-    newTask.title,
-    taskService.enumFromValue(newTask.taskType, TaskType),
-    midnight,
-    newTask.description
-  );
+async function newTask(task: newTaskDto): Promise<void> {
   tasks.value.push({
     id: task.id,
     title: task.title,
@@ -208,28 +199,16 @@ async function newTask(newTask: INewTaskForm): Promise<void> {
     completed: false,
     lastUpdated: DateTime.now(),
   });
-  actionQueue.value.push({
-    task: task,
-    type: ActionType.CREATE,
-    attempts: 0,
-  });
+  const action: IAction = new Action(task, ActionType.CREATE);
+  actionQueue.value.push(action);
+  actionQueueService.push(action);
   newTaskVisible.value = false;
 }
 
-async function requestUpdateTask(taskToUpdate: IUpdateTaskForm): Promise<void> {
-  const task: IUpdateTaskDTO = {
-    id: taskToUpdate.id,
-    title: taskToUpdate.title,
-    description: taskToUpdate.description,
-    type: taskService.enumFromValue(taskToUpdate.taskType, TaskType),
-    due: DateTime.fromJSDate(taskToUpdate.due),
-    complete: taskToUpdate.complete,
-  };
-  actionQueue.value.push({
-    task,
-    type: ActionType.UPDATE,
-    attempts: 0,
-  });
+async function requestUpdateTask(task: IUpdateTaskDTO): Promise<void> {
+  const action: IAction = new Action(task, ActionType.UPDATE);
+  actionQueue.value.push(action);
+  actionQueueService.push(action);
   const cachedTask = tasks.value.find((t) => t.id === task.id);
   if (cachedTask) {
     cachedTask.title = task.title;
@@ -241,11 +220,9 @@ async function requestUpdateTask(taskToUpdate: IUpdateTaskForm): Promise<void> {
 }
 
 async function removeTask(id: string): Promise<void> {
-  actionQueue.value.push({
-    task: id,
-    type: ActionType.DELETE,
-    attempts: 0,
-  });
+  const action: IAction = new Action(id, ActionType.DELETE);
+  actionQueue.value.push(action);
+  actionQueueService.push(action);
   const index = tasks.value.findIndex((task: ITask) => task.id === id);
   if (index > -1) {
     tasks.value.splice(index, 1);
@@ -273,14 +250,22 @@ function completeTask(info: { id: string; isComplete: boolean }): void {
     due: taskToUpdate.due,
     complete: info.isComplete,
   };
-  actionQueue.value.push({
-    task: task,
-    type: ActionType.UPDATE,
-    attempts: 0,
-  });
+  const action: IAction = new Action(task, ActionType.UPDATE);
+  actionQueue.value.push(action);
+  actionQueueService.push(action);
 }
 
-watch(lastUpdated, async () => (tasks.value = await taskService.getTasks()));
+watch(lastUpdated, async () => {
+  tasks.value = await taskService.getTasks();
+  for (const task of tasks.value) {
+    if (task.completed) {
+      switch (task.type) {
+        case TaskType.DAILY:
+          break;
+      }
+    }
+  }
+});
 </script>
 
 <style lang="scss" scoped>
