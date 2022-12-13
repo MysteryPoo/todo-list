@@ -1,4 +1,4 @@
-export default interface IForm {
+export interface IUpdateTaskForm {
   id: string;
   title: string;
   description?: string;

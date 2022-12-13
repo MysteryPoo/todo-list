@@ -26,11 +26,12 @@
 </template>
 
 <script lang="ts" setup>
-import { onMounted, ref, watch } from "vue";
+import { onMounted, onUnmounted, ref, type Ref, watch } from "vue";
 import type ITask from "@/interfaces/task.interface";
 import { DateTime } from "luxon";
 import { computed } from "vue";
 import Button from "primevue/button";
+import { TaskType } from "@/enums/tasktype.enum";
 
 const props = defineProps<{
   task: ITask;
@@ -40,6 +41,7 @@ const emit = defineEmits<{
   (e: "remove", id: string): void;
   (e: "update", id: string): void;
   (e: "complete", info: { id: string; isComplete: boolean }): void;
+  (e: "reset-due", info: { id: string; due: DateTime }): void;
 }>();
 
 const pastDue = computed(() => {
@@ -52,15 +54,54 @@ const pastDue = computed(() => {
 });
 
 const completed = ref(false);
+const resetInterval: Ref<number | undefined> = ref(undefined);
+const requestedReset = ref(false);
 
 onMounted(() => {
   completed.value = props.task.completed;
+  resetInterval.value = setInterval(() => {
+    if (!requestedReset.value) requestReset();
+  }, 1000);
+});
+
+onUnmounted(() => {
+  clearInterval(resetInterval.value);
 });
 
 watch(completed, (newValue) => {
-  console.log(`Completed changed to: ${newValue}`);
   emit("complete", { id: props.task.id, isComplete: newValue });
 });
+
+function requestReset() {
+  requestedReset.value = true;
+  const task = props.task;
+  if (task.completed && DateTime.now() > task.due) {
+    switch (task.type) {
+      case TaskType.DAILY: {
+        emit("reset-due", { id: task.id, due: task.due.plus({ day: 1 }) });
+        break;
+      }
+      case TaskType.WEEKLY: {
+        emit("reset-due", { id: task.id, due: task.due.plus({ week: 1 }) });
+        break;
+      }
+      case TaskType.MONTHLY: {
+        emit("reset-due", { id: task.id, due: task.due.plus({ month: 1 }) });
+        break;
+      }
+      case TaskType.QUARTERLY: {
+        emit("reset-due", { id: task.id, due: task.due.plus({ quarter: 1 }) });
+        break;
+      }
+      case TaskType.ANNUALLY: {
+        emit("reset-due", { id: task.id, due: task.due.plus({ year: 1 }) });
+        break;
+      }
+      default:
+        throw new Error(`Resetting an unknown TaskType: ${task.type}`);
+    }
+  }
+}
 </script>
 
 <style lang="scss" scoped>

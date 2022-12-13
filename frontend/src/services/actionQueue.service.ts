@@ -1,6 +1,6 @@
 import type TaskService from "./task.service";
-import type newTaskDto from "@/dtos/newtask.dto";
-import type IUpdateTaskDto from "@/dtos/updatetask.dto";
+import type { INewTaskDto } from "@/dtos/newtask.dto";
+import type { IUpdateTaskDto } from "@/dtos/updatetask.dto";
 
 export enum ActionType {
   CREATE,
@@ -9,7 +9,7 @@ export enum ActionType {
 }
 
 export interface IAction {
-  task: newTaskDto | IUpdateTaskDto | string;
+  task: INewTaskDto | IUpdateTaskDto | string;
   type: ActionType;
   attempts: number;
 }
@@ -17,7 +17,7 @@ export interface IAction {
 export class Action {
   public attempts = 0;
   constructor(
-    public task: newTaskDto | IUpdateTaskDto | string,
+    public task: INewTaskDto | IUpdateTaskDto | string,
     public type: ActionType
   ) {}
 }
@@ -42,10 +42,10 @@ export class ActionQueueService {
         switch (action.type) {
           case ActionType.CREATE: {
             const taskFromServer = await this.taskService.newTask(
-              action.task as newTaskDto
+              action.task as INewTaskDto
             );
             this.updateIdForTask(
-              (action.task as newTaskDto).id,
+              (action.task as INewTaskDto).id,
               taskFromServer.id
             );
             break;
@@ -73,7 +73,7 @@ export class ActionQueueService {
     for (const taskAction of this.queue) {
       switch (taskAction.type) {
         case ActionType.CREATE: {
-          const task = taskAction.task as newTaskDto;
+          const task = taskAction.task as INewTaskDto;
           if (task.id === oldId) {
             task.id = newId;
           }

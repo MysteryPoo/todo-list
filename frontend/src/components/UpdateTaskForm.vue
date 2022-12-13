@@ -23,7 +23,7 @@
     <template #footer>
       <Button
         icon="pi pi-plus"
-        @click="$emit('update-task', convertFormToDto())"
+        @click="$emit('update-task', UpdateTaskDto.fromForm(form))"
         label="Submit"
       />
       <Button icon="pi pi-times" label="Cancel" @click="$emit('close')" />
@@ -33,17 +33,15 @@
 
 <script lang="ts" setup>
 import { ref, watch, type Ref } from "vue";
-import type IUpdateTaskForm from "@/interfaces/updateTaskForm.interface";
+import type { IUpdateTaskForm } from "@/interfaces/updateTaskForm.interface";
 import { TaskType } from "@/enums/tasktype.enum";
-import type IUpdateTaskDto from "@/dtos/updatetask.dto";
-import { useMidnight } from "@/composables/midnight";
+import { UpdateTaskDto, type IUpdateTaskDto } from "@/dtos/updatetask.dto";
 import InputText from "primevue/inputtext";
 import Dropdown from "primevue/dropdown";
 import Calendar from "primevue/calendar";
 import Button from "primevue/button";
 import Dialog from "primevue/dialog";
 import type ITask from "@/interfaces/task.interface";
-import TaskService from "@/services/task.service";
 
 const props = defineProps<{
   visible: boolean;
@@ -61,9 +59,6 @@ for (const value of Object.keys(TaskType)) {
   tasktypes.value.push(TaskType[value as keyof typeof TaskType]);
 }
 
-const taskService = new TaskService();
-const midnight = useMidnight();
-
 const form: Ref<IUpdateTaskForm> = ref({
   id: "",
   title: "",
@@ -72,17 +67,6 @@ const form: Ref<IUpdateTaskForm> = ref({
   due: new Date(),
   complete: false,
 });
-
-function convertFormToDto(): IUpdateTaskDto {
-  return {
-    id: form.value.id,
-    title: form.value.title,
-    description: form.value.description,
-    type: taskService.enumFromValue(form.value.taskType, TaskType),
-    due: midnight.getMidnight(form.value.due),
-    complete: form.value.complete,
-  };
-}
 
 watch(
   () => props.visible,

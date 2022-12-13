@@ -82,8 +82,8 @@
 import { computed, onMounted, onUnmounted, ref, watch, type Ref } from "vue";
 import { TaskType } from "@/enums/tasktype.enum";
 import type ITask from "@/interfaces/task.interface";
-import type newTaskDto from "@/dtos/newtask.dto";
-import type IUpdateTaskDTO from "@/dtos/updatetask.dto";
+import type { INewTaskDto } from "@/dtos/newtask.dto";
+import type { IUpdateTaskDto } from "@/dtos/updatetask.dto";
 import TaskService from "@/services/task.service";
 import Button from "primevue/button";
 import FieldSet from "primevue/fieldset";
@@ -138,7 +138,7 @@ const yearlyTasks = computed(() =>
   tasks.value.filter((task: ITask) => task.type === TaskType.ANNUALLY)
 );
 
-async function newTask(task: newTaskDto): Promise<void> {
+async function newTask(task: INewTaskDto): Promise<void> {
   tasks.value.push({
     id: task.id,
     title: task.title,
@@ -153,15 +153,15 @@ async function newTask(task: newTaskDto): Promise<void> {
   newTaskVisible.value = false;
 }
 
-async function updateTask(task: IUpdateTaskDTO): Promise<void> {
+async function updateTask(task: IUpdateTaskDto): Promise<void> {
   const action: IAction = new Action(task, ActionType.UPDATE);
   actionQueueService.push(action);
   const cachedTask = tasks.value.find((t) => t.id === task.id);
   if (cachedTask) {
-    cachedTask.title = task.title;
-    cachedTask.due = task.due;
+    cachedTask.title = task.title ?? cachedTask.title;
+    cachedTask.due = task.due ?? cachedTask.due;
     cachedTask.description = task.description;
-    cachedTask.type = task.type;
+    cachedTask.type = task.type ?? cachedTask.type;
   }
   updateTaskVisible.value = false;
 }
@@ -176,24 +176,17 @@ async function removeTask(id: string): Promise<void> {
 }
 
 function showUpdateTaskForm(id: string): void {
-  console.log(`Editing ${id}`);
   const task = tasks.value.find((t) => t.id === id);
-  if (!task) return;
+  if (!task) throw new Error(`Task (${id}) cannot be found.`);
   taskToUpdate.value = task;
   updateTaskVisible.value = true;
 }
 
 function completeTask(info: { id: string; isComplete: boolean }): void {
-  // TODO: Refactor into smaller DTO
-  console.log(`HomeView: Completing task with: ${info.isComplete}`);
   const taskToUpdate = tasks.value.find((task) => task.id === info.id);
-  if (!taskToUpdate) return;
-  const task: IUpdateTaskDTO = {
+  if (!taskToUpdate) throw new Error(`Task (${info.id}) cannot be found.`);
+  const task: IUpdateTaskDto = {
     id: taskToUpdate.id,
-    title: taskToUpdate.title,
-    description: taskToUpdate.description,
-    type: taskToUpdate.type,
-    due: taskToUpdate.due,
     complete: info.isComplete,
   };
   const action: IAction = new Action(task, ActionType.UPDATE);

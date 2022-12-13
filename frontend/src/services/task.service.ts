@@ -1,11 +1,11 @@
 import { TaskType } from "@/enums/tasktype.enum";
 import type ITask from "@/interfaces/task.interface";
-import type INewTaskDTO from "@/dtos/newtask.dto";
-import type IUpdateTaskDTO from "@/dtos/updatetask.dto";
+import type { INewTaskDto } from "@/dtos/newtask.dto";
+import type { IUpdateTaskDto } from "@/dtos/updatetask.dto";
 import { DateTime } from "luxon";
 
 export default class TaskService {
-  public async newTask(task: INewTaskDTO): Promise<ITask> {
+  public async newTask(task: INewTaskDto): Promise<ITask> {
     const response = await fetch("http://localhost:3000/v1/tasks", {
       method: "POST",
       headers: {
@@ -52,7 +52,7 @@ export default class TaskService {
     return d.lastUpdated;
   }
 
-  public async updateTask(task: IUpdateTaskDTO): Promise<ITask> {
+  public async updateTask(task: IUpdateTaskDto): Promise<ITask> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id, ...body } = task;
     const response = await fetch(`http://localhost:3000/v1/tasks/${task.id}`, {

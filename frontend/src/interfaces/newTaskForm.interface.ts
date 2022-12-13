@@ -1,4 +1,4 @@
-export default interface IForm {
+export interface INewTaskForm {
   title: string;
   description?: string;
   taskType: string;
