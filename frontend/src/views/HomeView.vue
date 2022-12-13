@@ -7,7 +7,7 @@
       :visible="updateTaskVisible"
       :task="taskToUpdate"
       @close="updateTaskVisible = false"
-      @update-task="requestUpdateTask"
+      @update-task="updateTask"
     />
     <NewTaskForm
       :visible="newTaskVisible"
@@ -22,7 +22,7 @@
     >
       <TaskList
         @remove-task="removeTask"
-        @update-task="updateTask"
+        @update-task="showUpdateTaskForm"
         @complete-task="completeTask"
         :tasks="dailyTasks"
       />
@@ -34,7 +34,7 @@
     >
       <TaskList
         @remove-task="removeTask"
-        @update-task="updateTask"
+        @update-task="showUpdateTaskForm"
         @complete-task="completeTask"
         :tasks="weeklyTasks"
       />
@@ -46,7 +46,7 @@
     >
       <TaskList
         @remove-task="removeTask"
-        @update-task="updateTask"
+        @update-task="showUpdateTaskForm"
         @complete-task="completeTask"
         :tasks="monthlyTasks"
       />
@@ -58,7 +58,7 @@
     >
       <TaskList
         @remove-task="removeTask"
-        @update-task="updateTask"
+        @update-task="showUpdateTaskForm"
         @complete-task="completeTask"
         :tasks="quarterlyTasks"
       />
@@ -70,7 +70,7 @@
     >
       <TaskList
         @remove-task="removeTask"
-        @update-task="updateTask"
+        @update-task="showUpdateTaskForm"
         @complete-task="completeTask"
         :tasks="yearlyTasks"
       />
@@ -98,7 +98,6 @@ import {
   type IAction,
 } from "@/services/actionQueue.service";
 
-const actionQueue: Ref<IAction[]> = ref([]);
 const lastUpdated = ref("");
 const newTaskVisible = ref(false);
 const refreshInterval: Ref<number | undefined> = ref(undefined);
@@ -112,59 +111,9 @@ onMounted(async () => {
   refreshInterval.value = setInterval(async () => {
     try {
       lastUpdated.value = await taskService.getLastUpdated();
-      while (actionQueue.value.length > 0) {
-        const action = actionQueue.value.shift();
-        if (!action) return;
-        try {
-          switch (action.type) {
-            case ActionType.CREATE: {
-              const taskFromServer = await taskService.newTask(
-                action.task as newTaskDto
-              );
-              for (const taskAction of actionQueue.value) {
-                switch (taskAction.type) {
-                  case ActionType.CREATE: {
-                    const task = taskAction.task as newTaskDto;
-                    if (task.id === (action.task as newTaskDto).id) {
-                      task.id = taskFromServer.id;
-                    }
-                    break;
-                  }
-                  case ActionType.UPDATE: {
-                    const task = taskAction.task as IUpdateTaskDTO;
-                    if (task.id === (action.task as IUpdateTaskDTO).id) {
-                      task.id = taskFromServer.id;
-                    }
-                    break;
-                  }
-                  case ActionType.DELETE: {
-                    const task = taskAction.task as string;
-                    if (task === (action.task as string)) {
-                      taskAction.task = taskFromServer.id;
-                    }
-                    break;
-                  }
-                }
-              }
-              break;
-            }
-            case ActionType.UPDATE: {
-              await taskService.updateTask(action.task as IUpdateTaskDTO);
-              break;
-            }
-            case ActionType.DELETE: {
-              await taskService.deleteTask(action.task as string);
-              break;
-            }
-            default:
-              throw new Error("Unknown action type in queue");
-          }
-        } catch {
-          if (action.attempts++ < 5) actionQueue.value.unshift(action);
-        }
-      }
+      await actionQueueService.sync();
     } catch {
-      console.log("There was an error.");
+      console.warn("There was an error.");
     }
   }, 1000);
 });
@@ -200,14 +149,12 @@ async function newTask(task: newTaskDto): Promise<void> {
     lastUpdated: DateTime.now(),
   });
   const action: IAction = new Action(task, ActionType.CREATE);
-  actionQueue.value.push(action);
   actionQueueService.push(action);
   newTaskVisible.value = false;
 }
 
-async function requestUpdateTask(task: IUpdateTaskDTO): Promise<void> {
+async function updateTask(task: IUpdateTaskDTO): Promise<void> {
   const action: IAction = new Action(task, ActionType.UPDATE);
-  actionQueue.value.push(action);
   actionQueueService.push(action);
   const cachedTask = tasks.value.find((t) => t.id === task.id);
   if (cachedTask) {
@@ -221,7 +168,6 @@ async function requestUpdateTask(task: IUpdateTaskDTO): Promise<void> {
 
 async function removeTask(id: string): Promise<void> {
   const action: IAction = new Action(id, ActionType.DELETE);
-  actionQueue.value.push(action);
   actionQueueService.push(action);
   const index = tasks.value.findIndex((task: ITask) => task.id === id);
   if (index > -1) {
@@ -229,7 +175,7 @@ async function removeTask(id: string): Promise<void> {
   }
 }
 
-function updateTask(id: string): void {
+function showUpdateTaskForm(id: string): void {
   console.log(`Editing ${id}`);
   const task = tasks.value.find((t) => t.id === id);
   if (!task) return;
@@ -251,7 +197,6 @@ function completeTask(info: { id: string; isComplete: boolean }): void {
     complete: info.isComplete,
   };
   const action: IAction = new Action(task, ActionType.UPDATE);
-  actionQueue.value.push(action);
   actionQueueService.push(action);
 }
 

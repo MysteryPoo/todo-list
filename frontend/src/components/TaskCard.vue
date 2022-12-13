@@ -57,14 +57,6 @@ onMounted(() => {
   completed.value = props.task.completed;
 });
 
-watch(
-  () => props.task.completed,
-  (newValue: boolean) => {
-    //console.log(`Completed set by props: ${newValue}`);
-    //completed.value = newValue;
-  }
-);
-
 watch(completed, (newValue) => {
   console.log(`Completed changed to: ${newValue}`);
   emit("complete", { id: props.task.id, isComplete: newValue });
