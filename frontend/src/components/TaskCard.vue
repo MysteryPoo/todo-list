@@ -68,14 +68,23 @@ onUnmounted(() => {
   clearInterval(resetInterval.value);
 });
 
+watch(
+  () => props.task.completed,
+  (newValue) => {
+    console.log("props changed");
+    completed.value = newValue;
+  }
+);
+
 watch(completed, (newValue) => {
   emit("complete", { id: props.task.id, isComplete: newValue });
+  requestedReset.value = false;
 });
 
 function requestReset() {
   requestedReset.value = true;
   const task = props.task;
-  if (task.completed && DateTime.now() > task.due) {
+  if (task.completed && DateTime.now() > task.due.plus({ day: 1 })) {
     switch (task.type) {
       case TaskType.DAILY: {
         emit("reset-due", { id: task.id, due: task.due.plus({ day: 1 }) });

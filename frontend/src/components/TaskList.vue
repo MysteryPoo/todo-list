@@ -7,6 +7,7 @@
       @remove="$emit('remove-task', $event)"
       @update="$emit('update-task', $event)"
       @complete="$emit('complete-task', $event)"
+      @reset-due="$emit('reset-due-task', $event)"
     />
   </div>
 </template>
@@ -14,6 +15,7 @@
 <script lang="ts" setup>
 import TaskCard from "@/components/TaskCard.vue";
 import type ITask from "@/interfaces/task.interface";
+import type { DateTime } from "luxon";
 
 defineProps<{
   tasks: Array<ITask>;
@@ -23,6 +25,7 @@ defineEmits<{
   (e: "remove-task", id: string): void;
   (e: "update-task", id: string): void;
   (e: "complete-task", info: { id: string; isComplete: boolean }): void;
+  (e: "reset-due-task", info: { id: string; due: DateTime }): void;
 }>();
 </script>
 

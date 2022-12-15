@@ -24,6 +24,7 @@
         @remove-task="removeTask"
         @update-task="showUpdateTaskForm"
         @complete-task="completeTask"
+        @reset-due-task="resetTask"
         :tasks="dailyTasks"
       />
     </FieldSet>
@@ -36,6 +37,7 @@
         @remove-task="removeTask"
         @update-task="showUpdateTaskForm"
         @complete-task="completeTask"
+        @reset-due-task="resetTask"
         :tasks="weeklyTasks"
       />
     </FieldSet>
@@ -48,6 +50,7 @@
         @remove-task="removeTask"
         @update-task="showUpdateTaskForm"
         @complete-task="completeTask"
+        @reset-due-task="resetTask"
         :tasks="monthlyTasks"
       />
     </FieldSet>
@@ -60,6 +63,7 @@
         @remove-task="removeTask"
         @update-task="showUpdateTaskForm"
         @complete-task="completeTask"
+        @reset-due-task="resetTask"
         :tasks="quarterlyTasks"
       />
     </FieldSet>
@@ -72,6 +76,7 @@
         @remove-task="removeTask"
         @update-task="showUpdateTaskForm"
         @complete-task="completeTask"
+        @reset-due-task="resetTask"
         :tasks="yearlyTasks"
       />
     </FieldSet>
@@ -186,11 +191,26 @@ function completeTask(info: { id: string; isComplete: boolean }): void {
   const taskToUpdate = tasks.value.find((task) => task.id === info.id);
   if (!taskToUpdate) throw new Error(`Task (${info.id}) cannot be found.`);
   const task: IUpdateTaskDto = {
-    id: taskToUpdate.id,
+    id: info.id,
     complete: info.isComplete,
   };
   const action: IAction = new Action(task, ActionType.UPDATE);
   actionQueueService.push(action);
+  taskToUpdate.completed = info.isComplete;
+}
+
+function resetTask(info: { id: string; due: DateTime }): void {
+  const taskToUpdate = tasks.value.find((task) => task.id === info.id);
+  if (!taskToUpdate) throw new Error(`Task (${info.id}) cannot be found.`);
+  const task: IUpdateTaskDto = {
+    id: info.id,
+    complete: false,
+    due: info.due,
+  };
+  const action: IAction = new Action(task, ActionType.UPDATE);
+  actionQueueService.push(action);
+  taskToUpdate.completed = false;
+  taskToUpdate.due = info.due;
 }
 
 watch(lastUpdated, async () => {
