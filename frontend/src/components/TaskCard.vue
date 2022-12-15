@@ -70,10 +70,7 @@ onUnmounted(() => {
 
 watch(
   () => props.task.completed,
-  (newValue) => {
-    console.log("props changed");
-    completed.value = newValue;
-  }
+  (newValue) => (completed.value = newValue)
 );
 
 watch(completed, (newValue) => {
@@ -167,8 +164,7 @@ function requestReset() {
     }
   }
   input[type="checkbox"] {
-    -webkit-appearance: none;
-    -moz-appearance: none;
+    appearance: none;
     position: relative;
     height: 15px;
     width: 15px;
