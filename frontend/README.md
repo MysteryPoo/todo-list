@@ -3,9 +3,7 @@
 This template should help get you started developing with Vue 3 in Vite.
 
 ## TO DO
-Hide completed tasks after some time
 Add an Undo queue
-Add button to show hidden tasks for a short time
 Deploy to server
 Setup Traefik
 Setup TLS

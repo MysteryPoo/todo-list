@@ -11,7 +11,11 @@
     />
     <NewTaskForm
       :visible="newTaskVisible"
-      @close="newTaskVisible = false"
+      :default-type="defaultTaskType"
+      @close="
+        newTaskVisible = false;
+        defaultTaskType = undefined;
+      "
       @new-task="newTask"
     />
     <Button label="New Task" @click="newTaskVisible = true" />
@@ -25,6 +29,13 @@
       :toggleable="true"
       :collapsed="dailyTasks.length === 0"
     >
+      <Button
+        label="New Task"
+        @click="
+          newTaskVisible = true;
+          defaultTaskType = TaskType.DAILY;
+        "
+      />
       <TaskList
         @remove-task="removeTask"
         @update-task="showUpdateTaskForm"
@@ -39,6 +50,13 @@
       :toggleable="true"
       :collapsed="weeklyTasks.length === 0"
     >
+      <Button
+        label="New Task"
+        @click="
+          newTaskVisible = true;
+          defaultTaskType = TaskType.WEEKLY;
+        "
+      />
       <TaskList
         @remove-task="removeTask"
         @update-task="showUpdateTaskForm"
@@ -53,6 +71,13 @@
       :toggleable="true"
       :collapsed="monthlyTasks.length === 0"
     >
+      <Button
+        label="New Task"
+        @click="
+          newTaskVisible = true;
+          defaultTaskType = TaskType.MONTHLY;
+        "
+      />
       <TaskList
         @remove-task="removeTask"
         @update-task="showUpdateTaskForm"
@@ -67,6 +92,13 @@
       :toggleable="true"
       :collapsed="quarterlyTasks.length === 0"
     >
+      <Button
+        label="New Task"
+        @click="
+          newTaskVisible = true;
+          defaultTaskType = TaskType.QUARTERLY;
+        "
+      />
       <TaskList
         @remove-task="removeTask"
         @update-task="showUpdateTaskForm"
@@ -81,6 +113,13 @@
       :toggleable="true"
       :collapsed="yearlyTasks.length === 0"
     >
+      <Button
+        label="New Task"
+        @click="
+          newTaskVisible = true;
+          defaultTaskType = TaskType.ANNUALLY;
+        "
+      />
       <TaskList
         @remove-task="removeTask"
         @update-task="showUpdateTaskForm"
@@ -122,6 +161,7 @@ const tasks: Ref<Array<ITask>> = ref([]);
 const taskToUpdate: Ref<ITask | undefined> = ref(undefined);
 const updateTaskVisible = ref(false);
 const showHidden = ref(false);
+const defaultTaskType: Ref<undefined | TaskType> = ref(undefined);
 
 onMounted(async () => {
   refreshInterval.value = setInterval(async () => {

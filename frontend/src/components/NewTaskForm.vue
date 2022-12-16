@@ -32,7 +32,7 @@
 </template>
 
 <script lang="ts" setup>
-import { ref, type Ref } from "vue";
+import { ref, type Ref, watch } from "vue";
 import type { INewTaskForm } from "@/interfaces/newTaskForm.interface";
 import { NewTaskDto, type INewTaskDto } from "@/dtos/newtask.dto";
 import { TaskType } from "@/enums/tasktype.enum";
@@ -42,8 +42,9 @@ import Dropdown from "primevue/dropdown";
 import Calendar from "primevue/calendar";
 import Button from "primevue/button";
 
-defineProps<{
+const props = defineProps<{
   visible: boolean;
+  defaultType?: TaskType;
 }>();
 
 defineEmits<{
@@ -63,6 +64,15 @@ const form: Ref<INewTaskForm> = ref({
   taskType: "",
   due: new Date(),
 });
+
+watch(
+  () => props.visible,
+  (newValue) => {
+    if (newValue) {
+      form.value.taskType = props.defaultType ?? "";
+    }
+  }
+);
 </script>
 
 <style lang="scss" scoped>
