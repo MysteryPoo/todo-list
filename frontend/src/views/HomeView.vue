@@ -31,6 +31,7 @@
         @complete-task="completeTask"
         @reset-due-task="resetTask"
         :tasks="dailyTasks"
+        :show-hidden="showHidden"
       />
     </FieldSet>
     <FieldSet
@@ -44,6 +45,7 @@
         @complete-task="completeTask"
         @reset-due-task="resetTask"
         :tasks="weeklyTasks"
+        :show-hidden="showHidden"
       />
     </FieldSet>
     <FieldSet
@@ -57,6 +59,7 @@
         @complete-task="completeTask"
         @reset-due-task="resetTask"
         :tasks="monthlyTasks"
+        :show-hidden="showHidden"
       />
     </FieldSet>
     <FieldSet
@@ -70,6 +73,7 @@
         @complete-task="completeTask"
         @reset-due-task="resetTask"
         :tasks="quarterlyTasks"
+        :show-hidden="showHidden"
       />
     </FieldSet>
     <FieldSet
@@ -83,6 +87,7 @@
         @complete-task="completeTask"
         @reset-due-task="resetTask"
         :tasks="yearlyTasks"
+        :show-hidden="showHidden"
       />
     </FieldSet>
   </main>
@@ -107,7 +112,6 @@ import {
   ActionType,
   type IAction,
 } from "@/services/actionQueue.service";
-import { useMidnight } from "@/composables/midnight";
 
 const lastUpdated = ref("");
 const newTaskVisible = ref(false);
@@ -117,7 +121,6 @@ const actionQueueService = new ActionQueueService(taskService);
 const tasks: Ref<Array<ITask>> = ref([]);
 const taskToUpdate: Ref<ITask | undefined> = ref(undefined);
 const updateTaskVisible = ref(false);
-const midnight = useMidnight();
 const showHidden = ref(false);
 
 onMounted(async () => {
@@ -142,17 +145,7 @@ const quarterlyTasks = computed(() => getVisibleTasks(TaskType.QUARTERLY));
 const yearlyTasks = computed(() => getVisibleTasks(TaskType.ANNUALLY));
 
 function getVisibleTasks(type: TaskType): ITask[] {
-  return tasks.value
-    .filter((task: ITask) => task.type === type)
-    .filter(
-      (task: ITask) =>
-        !(
-          !showHidden.value &&
-          task.completed &&
-          midnight.getMidnight(task.lastUpdated) <
-            midnight.getMidnight(DateTime.now())
-        )
-    );
+  return tasks.value.filter((task: ITask) => task.type === type);
 }
 
 async function newTask(task: INewTaskDto): Promise<void> {

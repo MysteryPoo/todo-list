@@ -2,6 +2,14 @@
   <div class="task-list">
     <TaskCard
       v-for="task in tasks"
+      v-show="
+        !(
+          !$props.showHidden &&
+          task.completed &&
+          midnight.getMidnight(task.lastUpdated) <
+            midnight.getMidnight(DateTime.now())
+        )
+      "
       :key="task.id"
       :task="task"
       @remove="$emit('remove-task', $event)"
@@ -14,11 +22,13 @@
 
 <script lang="ts" setup>
 import TaskCard from "@/components/TaskCard.vue";
+import { useMidnight } from "@/composables/midnight";
 import type ITask from "@/interfaces/task.interface";
-import type { DateTime } from "luxon";
+import { DateTime } from "luxon";
 
 defineProps<{
   tasks: Array<ITask>;
+  showHidden: boolean;
 }>();
 
 defineEmits<{
@@ -27,6 +37,8 @@ defineEmits<{
   (e: "complete-task", info: { id: string; isComplete: boolean }): void;
   (e: "reset-due-task", info: { id: string; due: DateTime }): void;
 }>();
+
+const midnight = useMidnight();
 </script>
 
 <style lang="scss" scoped>
