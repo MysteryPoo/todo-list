@@ -15,6 +15,11 @@
       @new-task="newTask"
     />
     <Button label="New Task" @click="newTaskVisible = true" />
+    <Button
+      :label="showHidden ? 'Hide Hidden' : 'Show Hidden'"
+      :icon="showHidden ? 'pi pi-eye' : 'pi pi-eye-slash'"
+      @click="showHidden = !showHidden"
+    />
     <FieldSet
       legend="Daily"
       :toggleable="true"
@@ -102,6 +107,7 @@ import {
   ActionType,
   type IAction,
 } from "@/services/actionQueue.service";
+import { useMidnight } from "@/composables/midnight";
 
 const lastUpdated = ref("");
 const newTaskVisible = ref(false);
@@ -111,6 +117,8 @@ const actionQueueService = new ActionQueueService(taskService);
 const tasks: Ref<Array<ITask>> = ref([]);
 const taskToUpdate: Ref<ITask | undefined> = ref(undefined);
 const updateTaskVisible = ref(false);
+const midnight = useMidnight();
+const showHidden = ref(false);
 
 onMounted(async () => {
   refreshInterval.value = setInterval(async () => {
@@ -127,21 +135,25 @@ onUnmounted(() => {
   clearInterval(refreshInterval.value);
 });
 
-const dailyTasks = computed(() =>
-  tasks.value.filter((task: ITask) => task.type === TaskType.DAILY)
-);
-const weeklyTasks = computed(() =>
-  tasks.value.filter((task: ITask) => task.type === TaskType.WEEKLY)
-);
-const monthlyTasks = computed(() =>
-  tasks.value.filter((task: ITask) => task.type === TaskType.MONTHLY)
-);
-const quarterlyTasks = computed(() =>
-  tasks.value.filter((task: ITask) => task.type === TaskType.QUARTERLY)
-);
-const yearlyTasks = computed(() =>
-  tasks.value.filter((task: ITask) => task.type === TaskType.ANNUALLY)
-);
+const dailyTasks = computed(() => getVisibleTasks(TaskType.DAILY));
+const weeklyTasks = computed(() => getVisibleTasks(TaskType.WEEKLY));
+const monthlyTasks = computed(() => getVisibleTasks(TaskType.MONTHLY));
+const quarterlyTasks = computed(() => getVisibleTasks(TaskType.QUARTERLY));
+const yearlyTasks = computed(() => getVisibleTasks(TaskType.ANNUALLY));
+
+function getVisibleTasks(type: TaskType): ITask[] {
+  return tasks.value
+    .filter((task: ITask) => task.type === type)
+    .filter(
+      (task: ITask) =>
+        !(
+          !showHidden.value &&
+          task.completed &&
+          midnight.getMidnight(task.lastUpdated) <
+            midnight.getMidnight(DateTime.now())
+        )
+    );
+}
 
 async function newTask(task: INewTaskDto): Promise<void> {
   tasks.value.push({
@@ -190,6 +202,7 @@ function showUpdateTaskForm(id: string): void {
 function completeTask(info: { id: string; isComplete: boolean }): void {
   const taskToUpdate = tasks.value.find((task) => task.id === info.id);
   if (!taskToUpdate) throw new Error(`Task (${info.id}) cannot be found.`);
+  if (taskToUpdate.completed === info.isComplete) return;
   const task: IUpdateTaskDto = {
     id: info.id,
     complete: info.isComplete,
