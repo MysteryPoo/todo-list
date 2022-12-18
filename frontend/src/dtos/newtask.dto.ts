@@ -1,12 +1,13 @@
 import { useEnumFromValue } from "@/composables/enumFromValue.composable";
 import { useMidnight } from "@/composables/midnight";
+import { DtoType } from "@/enums/dtoType.enum";
 import { TaskType } from "@/enums/tasktype.enum";
 import type { INewTaskForm } from "@/interfaces/newTaskForm.interface";
+import type { ITaskDto } from "@/interfaces/taskDto.interface";
 import type { DateTime } from "luxon";
 import { v4 as uuidv4 } from "uuid";
 
-export interface INewTaskDto {
-  id: string;
+export interface INewTaskDto extends ITaskDto {
   title: string;
   type: TaskType;
   due: DateTime;
@@ -25,6 +26,7 @@ export class NewTaskDto implements INewTaskDto {
     );
   }
 
+  public readonly dtoType = DtoType.NewTask;
   public id: string;
 
   constructor(

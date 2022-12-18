@@ -24,6 +24,7 @@
       :icon="showHidden ? 'pi pi-eye' : 'pi pi-eye-slash'"
       @click="showHidden = !showHidden"
     />
+    <Button label="Undo" @click="undo" />
     <FieldSet
       legend="Daily"
       :toggleable="true"
@@ -151,12 +152,16 @@ import {
   ActionType,
   type IAction,
 } from "@/services/actionQueue.service";
+import { UndoService } from "@/services/undo.service";
+import { DtoType } from "@/enums/dtoType.enum";
+import { DeleteTaskDto } from "@/dtos/deleteTask.dto";
 
 const lastUpdated = ref("");
 const newTaskVisible = ref(false);
 const refreshInterval: Ref<number | undefined> = ref(undefined);
 const taskService: TaskService = new TaskService();
 const actionQueueService = new ActionQueueService(taskService);
+const undoService = new UndoService(actionQueueService);
 const tasks: Ref<Array<ITask>> = ref([]);
 const taskToUpdate: Ref<ITask | undefined> = ref(undefined);
 const updateTaskVisible = ref(false);
@@ -189,7 +194,7 @@ function getVisibleTasks(type: TaskType): ITask[] {
 }
 
 async function newTask(task: INewTaskDto): Promise<void> {
-  tasks.value.push({
+  const cachedTask: ITask = {
     id: task.id,
     title: task.title,
     description: task.description,
@@ -197,17 +202,20 @@ async function newTask(task: INewTaskDto): Promise<void> {
     due: task.due,
     completed: false,
     lastUpdated: DateTime.now(),
-  });
+  };
+  tasks.value.push(cachedTask);
   const action: IAction = new Action(task, ActionType.CREATE);
+  undoService.prepareForUndo(ActionType.CREATE, cachedTask);
   actionQueueService.push(action);
   newTaskVisible.value = false;
 }
 
 async function updateTask(task: IUpdateTaskDto): Promise<void> {
   const action: IAction = new Action(task, ActionType.UPDATE);
-  actionQueueService.push(action);
   const cachedTask = tasks.value.find((t) => t.id === task.id);
   if (cachedTask) {
+    undoService.prepareForUndo(ActionType.UPDATE, cachedTask);
+    actionQueueService.push(action);
     cachedTask.title = task.title ?? cachedTask.title;
     cachedTask.due = task.due ?? cachedTask.due;
     cachedTask.description = task.description;
@@ -217,10 +225,13 @@ async function updateTask(task: IUpdateTaskDto): Promise<void> {
 }
 
 async function removeTask(id: string): Promise<void> {
-  const action: IAction = new Action(id, ActionType.DELETE);
+  const deleteTaskDto = new DeleteTaskDto(id);
+  const action: IAction = new Action(deleteTaskDto, ActionType.DELETE);
   actionQueueService.push(action);
   const index = tasks.value.findIndex((task: ITask) => task.id === id);
   if (index > -1) {
+    const cachedTask = tasks.value[index];
+    undoService.prepareForUndo(ActionType.DELETE, cachedTask);
     tasks.value.splice(index, 1);
   }
 }
@@ -237,6 +248,7 @@ function completeTask(info: { id: string; isComplete: boolean }): void {
   if (!taskToUpdate) throw new Error(`Task (${info.id}) cannot be found.`);
   if (taskToUpdate.completed === info.isComplete) return;
   const task: IUpdateTaskDto = {
+    dtoType: DtoType.UpdateTask,
     id: info.id,
     complete: info.isComplete,
   };
@@ -249,6 +261,7 @@ function resetTask(info: { id: string; due: DateTime }): void {
   const taskToUpdate = tasks.value.find((task) => task.id === info.id);
   if (!taskToUpdate) throw new Error(`Task (${info.id}) cannot be found.`);
   const task: IUpdateTaskDto = {
+    dtoType: DtoType.UpdateTask,
     id: info.id,
     complete: false,
     due: info.due,
@@ -257,6 +270,15 @@ function resetTask(info: { id: string; due: DateTime }): void {
   actionQueueService.push(action);
   taskToUpdate.completed = false;
   taskToUpdate.due = info.due;
+}
+
+function undo(): void {
+  if (undoService.length > 0) {
+    const undoAction: IAction | undefined = undoService.pop();
+    if (undoAction) {
+      actionQueueService.push(undoAction);
+    }
+  }
 }
 
 watch(lastUpdated, async () => {

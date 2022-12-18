@@ -3,9 +3,10 @@ import type { IUpdateTaskForm } from "@/interfaces/updateTaskForm.interface";
 import type { DateTime } from "luxon";
 import { useEnumFromValue } from "@/composables/enumFromValue.composable";
 import { useMidnight } from "@/composables/midnight";
+import type { ITaskDto } from "@/interfaces/taskDto.interface";
+import { DtoType } from "@/enums/dtoType.enum";
 
-export interface IUpdateTaskDto {
-  id: string;
+export interface IUpdateTaskDto extends ITaskDto {
   title?: string;
   description?: string;
   type?: TaskType;
@@ -27,6 +28,9 @@ export class UpdateTaskDto implements IUpdateTaskDto {
       form.description
     );
   }
+
+  public readonly dtoType: DtoType = DtoType.UpdateTask;
+
   constructor(
     public id: string,
     public title?: string,

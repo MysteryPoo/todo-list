@@ -1,6 +1,9 @@
 import type TaskService from "./task.service";
 import type { INewTaskDto } from "@/dtos/newtask.dto";
 import type { IUpdateTaskDto } from "@/dtos/updatetask.dto";
+import type { IContainsIds } from "@/interfaces/containsIds.interface";
+import type { ITaskDto } from "@/interfaces/taskDto.interface";
+import type { IDeleteTaskDto } from "@/dtos/deleteTask.dto";
 
 export enum ActionType {
   CREATE,
@@ -9,24 +12,33 @@ export enum ActionType {
 }
 
 export interface IAction {
-  task: INewTaskDto | IUpdateTaskDto | string;
+  task: ITaskDto;
   type: ActionType;
   attempts: number;
 }
 
 export class Action {
   public attempts = 0;
-  constructor(
-    public task: INewTaskDto | IUpdateTaskDto | string,
-    public type: ActionType
-  ) {}
+  constructor(public task: ITaskDto, public type: ActionType) {}
 }
 
-export class ActionQueueService {
+export class ActionQueueService implements IContainsIds {
   private queue: IAction[] = [];
   private isSyncing = false;
+  private listeners: IContainsIds[] = [this];
 
   constructor(private taskService: TaskService) {}
+
+  public listen(listener: IContainsIds) {
+    this.listeners.push(listener);
+  }
+
+  public ignore(listener: IContainsIds) {
+    const index = this.listeners.findIndex((l) => listener === l);
+    if (index > -1) {
+      this.listeners.splice(index, 1);
+    }
+  }
 
   public push(action: IAction): void {
     this.queue.push(action);
@@ -44,9 +56,11 @@ export class ActionQueueService {
             const taskFromServer = await this.taskService.newTask(
               action.task as INewTaskDto
             );
-            this.updateIdForTask(
-              (action.task as INewTaskDto).id,
-              taskFromServer.id
+            this.listeners.forEach((listener) =>
+              listener.updateIdForTask(
+                (action.task as INewTaskDto).id,
+                taskFromServer.id
+              )
             );
             break;
           }
@@ -55,7 +69,7 @@ export class ActionQueueService {
             break;
           }
           case ActionType.DELETE: {
-            await this.taskService.deleteTask(action.task as string);
+            await this.taskService.deleteTask(action.task as IDeleteTaskDto);
             break;
           }
           default:
@@ -69,30 +83,11 @@ export class ActionQueueService {
     }
   }
 
-  private updateIdForTask(oldId: string, newId: string): void {
+  // From IContainsIds
+  public updateIdForTask(oldId: string, newId: string): void {
     for (const taskAction of this.queue) {
-      switch (taskAction.type) {
-        case ActionType.CREATE: {
-          const task = taskAction.task as INewTaskDto;
-          if (task.id === oldId) {
-            task.id = newId;
-          }
-          break;
-        }
-        case ActionType.UPDATE: {
-          const task = taskAction.task as IUpdateTaskDto;
-          if (task.id === oldId) {
-            task.id = newId;
-          }
-          break;
-        }
-        case ActionType.DELETE: {
-          const taskId = taskAction.task as string;
-          if (taskId === oldId) {
-            taskAction.task = newId;
-          }
-          break;
-        }
+      if (taskAction.task.id === oldId) {
+        taskAction.task.id = newId;
       }
     }
   }

@@ -69,6 +69,9 @@ watch(
   () => props.visible,
   (newValue) => {
     if (newValue) {
+      form.value.title = "";
+      form.value.description = "";
+      form.value.due = new Date();
       form.value.taskType = props.defaultType ?? "";
     }
   }

@@ -3,8 +3,12 @@ import type ITask from "@/interfaces/task.interface";
 import type { INewTaskDto } from "@/dtos/newtask.dto";
 import type { IUpdateTaskDto } from "@/dtos/updatetask.dto";
 import { DateTime } from "luxon";
+import { useEnumFromValue } from "@/composables/enumFromValue.composable";
+import type { IDeleteTaskDto } from "@/dtos/deleteTask.dto";
 
 export default class TaskService {
+  private enumFromValue = useEnumFromValue().enumFromValue;
+
   public async newTask(task: INewTaskDto): Promise<ITask> {
     const response = await fetch("http://localhost:3000/v1/tasks", {
       method: "POST",
@@ -78,8 +82,8 @@ export default class TaskService {
     throw new Error("Unknown error occurred");
   }
 
-  public async deleteTask(id: string): Promise<ITask> {
-    const response = await fetch(`http://localhost:3000/v1/tasks/${id}`, {
+  public async deleteTask(task: IDeleteTaskDto): Promise<ITask> {
+    const response = await fetch(`http://localhost:3000/v1/tasks/${task.id}`, {
       method: "DELETE",
     });
     if (response.status === 200) {
@@ -94,16 +98,5 @@ export default class TaskService {
       };
     }
     throw new Error("Unknown error occurred");
-  }
-
-  public enumFromValue<T extends Record<string, string>>(
-    val: string,
-    _enum: T
-  ) {
-    const enumName = (Object.keys(_enum) as Array<keyof T>).find(
-      (k) => _enum[k] === val
-    );
-    if (!enumName) throw Error(); // here fail fast as an example
-    return _enum[enumName];
   }
 }
