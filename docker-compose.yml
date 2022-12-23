@@ -1,5 +1,17 @@
 version: '3'
 services:
+  traefik:
+    image: "traefik:v2.9"
+    command:
+      - "--providers.docker=true"
+      - "--providers.docker.exposedbydefault=false"
+      - "--entrypoints.web.address=:80"
+    ports:
+      - "80:80"
+
+    volumes:
+      - "/var/run/docker.sock:/var/run/docker.sock:ro"
+
   mongo:
     container_name: todo_mongo
     image: mongo:4.4.11
@@ -12,6 +24,25 @@ services:
       - todo_mongo_volume:/data/db
     ports:
       - "27017:27017"
+
+  backend:
+    build: "backend"
+    depends_on:
+      - traefik
+      - mongo
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.backend.rule=Host(`api.localhost`)"
+      - "traefik.http.services.backend.loadbalancer.server.port=3000"
+  
+  frontend:
+    build: "frontend"
+    depends_on:
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.frontend.rule=Host(`todo.localhost`)"
+      - "traefik.http.services.frontend.loadbalancer.server.port=8080"
 
 volumes:
   todo_mongo_volume:

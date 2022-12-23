@@ -159,7 +159,9 @@ import { DeleteTaskDto } from "@/dtos/deleteTask.dto";
 const lastUpdated = ref("");
 const newTaskVisible = ref(false);
 const refreshInterval: Ref<number | undefined> = ref(undefined);
-const taskService: TaskService = new TaskService();
+const taskService: TaskService = new TaskService(
+  import.meta.env.VITE_API_ENDPOINT
+);
 const actionQueueService = new ActionQueueService(taskService);
 const undoService = new UndoService(actionQueueService);
 const tasks: Ref<Array<ITask>> = ref([]);
@@ -169,7 +171,7 @@ const showHidden = ref(false);
 const defaultTaskType: Ref<undefined | TaskType> = ref(undefined);
 
 onMounted(async () => {
-  refreshInterval.value = setInterval(async () => {
+  refreshInterval.value = window.setInterval(async () => {
     try {
       lastUpdated.value = await taskService.getLastUpdated();
       await actionQueueService.sync();
@@ -180,7 +182,7 @@ onMounted(async () => {
 });
 
 onUnmounted(() => {
-  clearInterval(refreshInterval.value);
+  window.clearInterval(refreshInterval.value);
 });
 
 const dailyTasks = computed(() => getVisibleTasks(TaskType.DAILY));

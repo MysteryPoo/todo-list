@@ -59,13 +59,13 @@ const requestedReset = ref(false);
 
 onMounted(() => {
   completed.value = props.task.completed;
-  resetInterval.value = setInterval(() => {
+  resetInterval.value = window.setInterval(() => {
     if (!requestedReset.value) requestReset();
   }, 1000);
 });
 
 onUnmounted(() => {
-  clearInterval(resetInterval.value);
+  window.clearInterval(resetInterval.value);
 });
 
 watch(

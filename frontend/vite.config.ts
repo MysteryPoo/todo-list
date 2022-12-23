@@ -14,4 +14,14 @@ export default defineConfig({
       "balm-ui-css": "balm-ui/dist/balm-ui.css",
     },
   },
+  server: {
+    proxy: {
+      "/api": {
+        target: "http://api.localhost",
+        changeOrigin: true,
+        secure: false,
+        rewrite: (path) => path.replace(/^\/api/, ""),
+      },
+    },
+  },
 });

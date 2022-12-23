@@ -9,8 +9,10 @@ import type { IDeleteTaskDto } from "@/dtos/deleteTask.dto";
 export default class TaskService {
   private enumFromValue = useEnumFromValue().enumFromValue;
 
+  constructor(public apiEndpoint: string) {}
+
   public async newTask(task: INewTaskDto): Promise<ITask> {
-    const response = await fetch("http://localhost:3000/v1/tasks", {
+    const response = await fetch(`${this.apiEndpoint}/v1/tasks`, {
       method: "POST",
       headers: {
         //Authorization: `Bearer ${window.localStorage.token}`,
@@ -34,7 +36,7 @@ export default class TaskService {
   }
 
   public async getTasks(): Promise<Array<ITask>> {
-    const response = await fetch("http://localhost:3000/v1/tasks");
+    const response = await fetch(`/api/v1/tasks`);
     const d = await response.json();
     const taskList: Array<ITask> = [];
     for (const task of d) {
@@ -51,7 +53,7 @@ export default class TaskService {
   }
 
   public async getLastUpdated(): Promise<string> {
-    const response = await fetch("http://localhost:3000/v1/tasks/lastUpdated");
+    const response = await fetch(`/api/v1/tasks/lastUpdated`);
     const d = await response.json();
     return d.lastUpdated;
   }
@@ -59,7 +61,7 @@ export default class TaskService {
   public async updateTask(task: IUpdateTaskDto): Promise<ITask> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id, ...body } = task;
-    const response = await fetch(`http://localhost:3000/v1/tasks/${task.id}`, {
+    const response = await fetch(`${this.apiEndpoint}/v1/tasks/${task.id}`, {
       method: "PATCH",
       headers: {
         //Authorization: `Bearer ${window.localStorage.token}`,
@@ -83,7 +85,7 @@ export default class TaskService {
   }
 
   public async deleteTask(task: IDeleteTaskDto): Promise<ITask> {
-    const response = await fetch(`http://localhost:3000/v1/tasks/${task.id}`, {
+    const response = await fetch(`${this.apiEndpoint}/v1/tasks/${task.id}`, {
       method: "DELETE",
     });
     if (response.status === 200) {

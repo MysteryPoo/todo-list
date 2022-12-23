@@ -1,12 +1,10 @@
-FROM node:lts-alpine3.13 as build-stage
-WORKDIR /app
-COPY package*.json ./
-RUN npm install
-COPY ./ .
+FROM node:16-alpine as builder
+WORKDIR /code/
+ADD package-lock.json .
+ADD package.json .
+RUN npm ci
+ADD . .
 RUN npm run build
-# TODO : Create a .env with ENV passed from docker-compose
 
-FROM nginx as production-stage
-RUN mkdir /app
-COPY --from=build-stage /app/dist /app
-COPY nginx.conf /etc/nginx/nginx.conf
+FROM devforth/spa-to-http:latest
+COPY --from=builder /code/dist/ .
