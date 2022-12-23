@@ -32,7 +32,7 @@ services:
       - mongo
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.backend.rule=Host(`api.localhost`)"
+      - "traefik.http.routers.backend.rule=Host(`todo-api.thornyshits.website`)"
       - "traefik.http.services.backend.loadbalancer.server.port=3000"
   
   frontend:
@@ -41,7 +41,7 @@ services:
       - traefik
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.frontend.rule=Host(`todo.localhost`)"
+      - "traefik.http.routers.frontend.rule=Host(`todo.thornyshits.website`)"
       - "traefik.http.services.frontend.loadbalancer.server.port=8080"
 
 volumes:
