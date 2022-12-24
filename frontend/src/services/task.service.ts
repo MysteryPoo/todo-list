@@ -12,7 +12,7 @@ export default class TaskService {
   constructor(public apiEndpoint: string) {}
 
   public async newTask(task: INewTaskDto): Promise<ITask> {
-    const response = await fetch(`${this.apiEndpoint}/v1/tasks`, {
+    const response = await fetch(`/api/v1/tasks`, {
       method: "POST",
       headers: {
         //Authorization: `Bearer ${window.localStorage.token}`,
@@ -61,7 +61,7 @@ export default class TaskService {
   public async updateTask(task: IUpdateTaskDto): Promise<ITask> {
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { id, ...body } = task;
-    const response = await fetch(`${this.apiEndpoint}/v1/tasks/${task.id}`, {
+    const response = await fetch(`/api/v1/tasks/${task.id}`, {
       method: "PATCH",
       headers: {
         //Authorization: `Bearer ${window.localStorage.token}`,
@@ -85,7 +85,7 @@ export default class TaskService {
   }
 
   public async deleteTask(task: IDeleteTaskDto): Promise<ITask> {
-    const response = await fetch(`${this.apiEndpoint}/v1/tasks/${task.id}`, {
+    const response = await fetch(`/api/v1/tasks/${task.id}`, {
       method: "DELETE",
     });
     if (response.status === 200) {
