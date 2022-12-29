@@ -3,13 +3,22 @@ services:
   traefik:
     image: "traefik:v2.9"
     command:
+      #- "--log.level=DEBUG"
+      - "--api.insecure=true"
       - "--providers.docker=true"
       - "--providers.docker.exposedbydefault=false"
       - "--entrypoints.web.address=:80"
+      - "--entrypoints.websecure.address=:443"
+      - "--certificatesresolvers.myresolver.acme.tlschallenge=true"
+      #- "--certificatesresolvers.myresolver.acme.caserver=https://acme-staging-v02.api.letsencrypt.org/directory"
+      - "--certificatesresolvers.myresolver.acme.email=victordavion@gmail.com"
+      - "--certificatesresolvers.myresolver.acme.storage=/letsencrypt/acme.json"
     ports:
       - "80:80"
+      - "443:443"
 
     volumes:
+      - "./letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
 
   mongo:
@@ -34,6 +43,8 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.backend.rule=Host(`todo-api.thornyshits.website`)"
       - "traefik.http.services.backend.loadbalancer.server.port=3000"
+      - "traefik.http.routers.backend.entrypoints=websecure"
+      - "traefik.http.routers.backend.tls.certresolver=myresolver"
   
   frontend:
     build: "frontend"
@@ -43,6 +54,8 @@ services:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=Host(`todo.thornyshits.website`)"
       - "traefik.http.services.frontend.loadbalancer.server.port=8080"
+      - "traefik.http.routers.frontend.entrypoints=websecure"
+      - "traefik.http.routers.frontend.tls.certresolver=myresolver"
 
 volumes:
   todo_mongo_volume:
