@@ -17,8 +17,6 @@
         :options="tasktypes"
         placeholder="Select period"
       />
-      <label for="due" class="label">Due Date</label>
-      <Calendar inputId="due" v-model="form.due" autocomplete="off" />
     </div>
     <template #footer>
       <Button
@@ -38,7 +36,6 @@ import { TaskType } from "@/enums/tasktype.enum";
 import { UpdateTaskDto, type IUpdateTaskDto } from "@/dtos/updatetask.dto";
 import InputText from "primevue/inputtext";
 import Dropdown from "primevue/dropdown";
-import Calendar from "primevue/calendar";
 import Button from "primevue/button";
 import Dialog from "primevue/dialog";
 import type ITask from "@/interfaces/task.interface";

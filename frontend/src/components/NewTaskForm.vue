@@ -17,15 +17,9 @@
         :options="tasktypes"
         placeholder="Select period"
       />
-      <label for="due" class="label">Due Date</label>
-      <Calendar inputId="due" v-model="form.due" autocomplete="off" />
     </div>
     <template #footer>
-      <Button
-        icon="pi pi-plus"
-        @click="$emit('new-task', NewTaskDto.fromForm(form))"
-        label="Submit"
-      />
+      <Button icon="pi pi-plus" @click="submit" label="Submit" />
       <Button icon="pi pi-times" label="Cancel" @click="$emit('close')" />
     </template>
   </Dialog>
@@ -39,15 +33,15 @@ import { TaskType } from "@/enums/tasktype.enum";
 import Dialog from "primevue/dialog";
 import InputText from "primevue/inputtext";
 import Dropdown from "primevue/dropdown";
-import Calendar from "primevue/calendar";
 import Button from "primevue/button";
+import { DateTime } from "luxon";
 
 const props = defineProps<{
   visible: boolean;
   defaultType?: TaskType;
 }>();
 
-defineEmits<{
+const emit = defineEmits<{
   (e: "new-task", form: INewTaskDto): void;
   (e: "close"): void;
 }>();
@@ -76,6 +70,45 @@ watch(
     }
   }
 );
+
+function submit(): void {
+  form.value.due = beginningOfPeriod(getTaskType(form.value.taskType));
+  emit("new-task", NewTaskDto.fromForm(form.value));
+}
+
+function getTaskType(type: string): TaskType {
+  switch (type) {
+    case "Daily":
+      return TaskType.DAILY;
+    case "Weekly":
+      return TaskType.WEEKLY;
+    case "Monthly":
+      return TaskType.MONTHLY;
+    case "Quarterly":
+      return TaskType.QUARTERLY;
+    case "Annually":
+      return TaskType.ANNUALLY;
+    default:
+      throw new Error("Invalid TaskType provided.");
+  }
+}
+
+function beginningOfPeriod(period: TaskType): Date {
+  switch (period) {
+    case TaskType.DAILY:
+      return DateTime.fromJSDate(new Date()).startOf("day").toJSDate();
+    case TaskType.WEEKLY:
+      return DateTime.fromJSDate(new Date()).startOf("week").toJSDate();
+    case TaskType.MONTHLY:
+      return DateTime.fromJSDate(new Date()).startOf("month").toJSDate();
+    case TaskType.QUARTERLY:
+      return DateTime.fromJSDate(new Date()).startOf("quarter").toJSDate();
+    case TaskType.ANNUALLY:
+      return DateTime.fromJSDate(new Date()).startOf("year").toJSDate();
+    default:
+      throw new Error("Invalid TaskType provided.");
+  }
+}
 </script>
 
 <style lang="scss" scoped>
