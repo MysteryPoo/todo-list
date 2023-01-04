@@ -7,7 +7,7 @@ const pwaOptions: Partial<VitePWAOptions> = {
   manifest: {
     icons: [
       {
-        src: "/assets/house.svg",
+        src: "/favicon.svg",
         sizes: "any",
         type: "image/svg+xml",
       },
