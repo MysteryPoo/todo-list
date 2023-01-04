@@ -7,9 +7,9 @@ const pwaOptions: Partial<VitePWAOptions> = {
   manifest: {
     icons: [
       {
-        src: "@/assets/house.svg",
+        src: "/assets/house.svg",
         sizes: "any",
-        type: "image/svg",
+        type: "image/svg+xml",
       },
     ],
   },
