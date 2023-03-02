@@ -18,10 +18,11 @@ services:
     ports:
       - "80:80"
       - "443:443"
-
     volumes:
       - "./letsencrypt:/letsencrypt"
       - "/var/run/docker.sock:/var/run/docker.sock:ro"
+    mem_limit: "100m"
+    cpus: 1
 
   mongo:
     container_name: todo_mongo
@@ -35,6 +36,8 @@ services:
       - todo_mongo_volume:/data/db
     ports:
       - "27017:27017"
+    mem_limit: "200m"
+    cpus: 1
 
   backend:
     build: "backend"
@@ -47,6 +50,8 @@ services:
       - "traefik.http.services.backend.loadbalancer.server.port=3000"
       - "traefik.http.routers.backend.entrypoints=websecure"
       - "traefik.http.routers.backend.tls.certresolver=myresolver"
+    mem_limit: "200m"
+    cpus: 1
   
   frontend:
     build: "frontend"
@@ -58,6 +63,8 @@ services:
       - "traefik.http.services.frontend.loadbalancer.server.port=8080"
       - "traefik.http.routers.frontend.entrypoints=websecure"
       - "traefik.http.routers.frontend.tls.certresolver=myresolver"
+    mem_limit: "50m"
+    cpus: 1
 
 volumes:
   todo_mongo_volume:
