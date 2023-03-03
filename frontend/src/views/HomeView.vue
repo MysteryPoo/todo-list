@@ -1,6 +1,6 @@
 <template>
   <header>
-    {{ lastUpdated }}
+    {{ lastUpdated?.toFormat("DD hh:mm a") }}
   </header>
   <main>
     <UpdateTaskForm
@@ -18,118 +18,75 @@
       "
       @new-task="newTask"
     />
-    <Button label="New Task" @click="newTaskVisible = true" />
-    <Button
-      :label="showHidden ? 'Hide Hidden' : 'Show Hidden'"
-      :icon="showHidden ? 'pi pi-eye' : 'pi pi-eye-slash'"
-      @click="showHidden = !showHidden"
-    />
-    <Button label="Undo" @click="undo" />
-    <FieldSet
+    <div class="main-actions">
+      <Button label="New Task" @click="newTaskVisible = true" />
+      <Button
+        :label="showHidden ? 'Hide Hidden' : 'Show Hidden'"
+        :icon="showHidden ? 'pi pi-eye' : 'pi pi-eye-slash'"
+        @click="showHidden = !showHidden"
+      />
+      <Button label="Undo" @click="undo" />
+    </div>
+    <TaskList
+      @new-task="openNewTaskForm($event)"
+      @remove-task="removeTask"
+      @update-task="showUpdateTaskForm"
+      @complete-task="completeTask"
+      @reset-due-task="resetTask"
       legend="Daily"
-      :toggleable="true"
+      :default-type="TaskType.DAILY"
       :collapsed="dailyTasks.length === 0"
-    >
-      <Button
-        label="New Task"
-        @click="
-          newTaskVisible = true;
-          defaultTaskType = TaskType.DAILY;
-        "
-      />
-      <TaskList
-        @remove-task="removeTask"
-        @update-task="showUpdateTaskForm"
-        @complete-task="completeTask"
-        @reset-due-task="resetTask"
-        :tasks="dailyTasks"
-        :show-hidden="showHidden"
-      />
-    </FieldSet>
-    <FieldSet
+      :tasks="dailyTasks"
+      :show-hidden="showHidden"
+    />
+    <TaskList
+      @new-task="openNewTaskForm($event)"
+      @remove-task="removeTask"
+      @update-task="showUpdateTaskForm"
+      @complete-task="completeTask"
+      @reset-due-task="resetTask"
       legend="Weekly"
-      :toggleable="true"
+      :default-type="TaskType.WEEKLY"
       :collapsed="weeklyTasks.length === 0"
-    >
-      <Button
-        label="New Task"
-        @click="
-          newTaskVisible = true;
-          defaultTaskType = TaskType.WEEKLY;
-        "
-      />
-      <TaskList
-        @remove-task="removeTask"
-        @update-task="showUpdateTaskForm"
-        @complete-task="completeTask"
-        @reset-due-task="resetTask"
-        :tasks="weeklyTasks"
-        :show-hidden="showHidden"
-      />
-    </FieldSet>
-    <FieldSet
+      :tasks="weeklyTasks"
+      :show-hidden="showHidden"
+    />
+    <TaskList
+      @new-task="openNewTaskForm($event)"
+      @remove-task="removeTask"
+      @update-task="showUpdateTaskForm"
+      @complete-task="completeTask"
+      @reset-due-task="resetTask"
       legend="Monthly"
-      :toggleable="true"
+      :default-type="TaskType.MONTHLY"
       :collapsed="monthlyTasks.length === 0"
-    >
-      <Button
-        label="New Task"
-        @click="
-          newTaskVisible = true;
-          defaultTaskType = TaskType.MONTHLY;
-        "
-      />
-      <TaskList
-        @remove-task="removeTask"
-        @update-task="showUpdateTaskForm"
-        @complete-task="completeTask"
-        @reset-due-task="resetTask"
-        :tasks="monthlyTasks"
-        :show-hidden="showHidden"
-      />
-    </FieldSet>
-    <FieldSet
+      :tasks="monthlyTasks"
+      :show-hidden="showHidden"
+    />
+    <TaskList
+      @new-task="openNewTaskForm($event)"
+      @remove-task="removeTask"
+      @update-task="showUpdateTaskForm"
+      @complete-task="completeTask"
+      @reset-due-task="resetTask"
       legend="Quarterly"
-      :toggleable="true"
+      :default-type="TaskType.QUARTERLY"
       :collapsed="quarterlyTasks.length === 0"
-    >
-      <Button
-        label="New Task"
-        @click="
-          newTaskVisible = true;
-          defaultTaskType = TaskType.QUARTERLY;
-        "
-      />
-      <TaskList
-        @remove-task="removeTask"
-        @update-task="showUpdateTaskForm"
-        @complete-task="completeTask"
-        @reset-due-task="resetTask"
-        :tasks="quarterlyTasks"
-        :show-hidden="showHidden"
-      />
-    </FieldSet>
-    <FieldSet
+      :tasks="quarterlyTasks"
+      :show-hidden="showHidden"
+    />
+    <TaskList
+      @new-task="openNewTaskForm($event)"
+      @remove-task="removeTask"
+      @update-task="showUpdateTaskForm"
+      @complete-task="completeTask"
+      @reset-due-task="resetTask"
       legend="Yearly"
-      :toggleable="true"
+      :default-type="TaskType.ANNUALLY"
       :collapsed="yearlyTasks.length === 0"
-    >
-      <Button
-        label="New Task"
-        @click="
-          newTaskVisible = true;
-          defaultTaskType = TaskType.ANNUALLY;
-        "
-      />
-      <TaskList
-        @remove-task="removeTask"
-        @update-task="showUpdateTaskForm"
-        @complete-task="completeTask"
-        @reset-due-task="resetTask"
-        :tasks="yearlyTasks"
-        :show-hidden="showHidden"
-      />
-    </FieldSet>
+      :tasks="yearlyTasks"
+      :show-hidden="showHidden"
+    />
   </main>
 </template>
 
@@ -141,7 +98,6 @@ import type { INewTaskDto } from "@/dtos/newtask.dto";
 import type { IUpdateTaskDto } from "@/dtos/updatetask.dto";
 import TaskService from "@/services/task.service";
 import Button from "primevue/button";
-import FieldSet from "primevue/fieldset";
 import TaskList from "@/components/TaskList.vue";
 import NewTaskForm from "@/components/NewTaskForm.vue";
 import UpdateTaskForm from "@/components/UpdateTaskForm.vue";
@@ -156,7 +112,7 @@ import { UndoService } from "@/services/undo.service";
 import { DtoType } from "@/enums/dtoType.enum";
 import { DeleteTaskDto } from "@/dtos/deleteTask.dto";
 
-const lastUpdated = ref("");
+const lastUpdated: Ref<DateTime | null> = ref(null);
 const newTaskVisible = ref(false);
 const refreshInterval: Ref<number | undefined> = ref(undefined);
 const taskService: TaskService = new TaskService(
@@ -238,6 +194,11 @@ async function removeTask(id: string): Promise<void> {
   }
 }
 
+function openNewTaskForm(type: TaskType): void {
+  newTaskVisible.value = true;
+  defaultTaskType.value = type;
+}
+
 function showUpdateTaskForm(id: string): void {
   const task = tasks.value.find((t) => t.id === id);
   if (!task) throw new Error(`Task (${id}) cannot be found.`);
@@ -297,13 +258,10 @@ watch(lastUpdated, async () => {
 </script>
 
 <style lang="scss" scoped>
-.p-fieldset {
-  background-color: rgba(25, 25, 25, 0.8);
-  :deep(.p-fieldset-legend) {
-    background-color: rgba(50, 50, 50, 0.8);
-  }
-  :deep(.p-fieldset-legend-text) {
-    color: white;
-  }
+.main-actions {
+  display: flex;
+  flex-direction: row;
+  gap: 5px;
+  justify-content: space-between;
 }
 </style>

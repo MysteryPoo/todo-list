@@ -57,12 +57,12 @@ export default class TaskService {
     return taskList;
   }
 
-  public async getLastUpdated(): Promise<string> {
+  public async getLastUpdated(): Promise<DateTime> {
     const response = await fetch(
       `${import.meta.env.VITE_API_ENDPOINT}/v1/tasks/lastUpdated`
     );
-    const d = await response.json();
-    return d.lastUpdated;
+    const d: DateTime = DateTime.fromISO((await response.json()).lastUpdated);
+    return d;
   }
 
   public async updateTask(task: IUpdateTaskDto): Promise<ITask> {

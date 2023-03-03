@@ -1,6 +1,7 @@
 version: '3'
 services:
   traefik:
+    container_name: todo_traefik
     image: "traefik:v2.9"
     command:
       #- "--log.level=DEBUG"
@@ -40,6 +41,7 @@ services:
     cpus: 1
 
   backend:
+    container_name: todo_backend
     build: "backend"
     depends_on:
       - traefik
@@ -54,6 +56,7 @@ services:
     cpus: 1
   
   frontend:
+    container_name: todo_frontend
     build: "frontend"
     depends_on:
       - traefik
