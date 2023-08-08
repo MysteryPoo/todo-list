@@ -38,6 +38,7 @@ export class TasksService {
         id,
         {
           title: updateTaskDto.title,
+          description: updateTaskDto.description,
           complete: updateTaskDto.complete,
           type: updateTaskDto.type,
           due: updateTaskDto.due,
